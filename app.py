@@ -1188,10 +1188,7 @@ if menu == "🏠 탐험 본부 (홈)":
                     f'style="height:56px; width:auto; vertical-align:middle; margin-right:12px;">'
                     ) if _mascot_b64 else "🚀"
     md_html(f"""
-    <div style="text-align:center; margin-top:-6px;">
-        <div style="font-size:15px; color:#5B6B8C; letter-spacing:1px; margin-bottom:2px;">연구보고서</div>
-    </div>
-    <h1 style="text-align:center; font-family:'Jua',sans-serif; font-size:clamp(24px, 4.2vw, 46px); color:#1B2A4A; margin-top:0; line-height:1.25; white-space:nowrap;">
+    <h1 style="text-align:center; font-family:'Jua',sans-serif; font-size:clamp(24px, 4.2vw, 46px); color:#1B2A4A; margin-top:-6px; line-height:1.25; white-space:nowrap;">
         {_mascot_html}손끝에서 배우는 인공지능 원리 AI 탐험대
     </h1>
     <div style="text-align:center; margin-top:6px;">
@@ -1869,7 +1866,8 @@ elif menu == "📈 1. 마법의 선 긋기":
                 st.divider()
 
                 st.markdown("### 2️⃣ 인공지능 요정의 정답 확인하기")
-                st.success(f"✨ **요정의 마법 성공!** 요정이 1칸 갈 때마다 **{w_ai:.1f}**씩 올라가는 완벽한 선을 알아서 찾았어요!")
+                st.success(f"✨ **요정의 마법 성공!** 요정이 1칸 갈 때마다 **{w_ai:.1f}**씩 올라가는, "
+                           f"점들에 **가장 잘 맞는 선**을 알아서 찾았어요! (모든 점을 정확히 지나가진 않아도, 오차가 가장 작은 선이에요.)")
 
                 col_plot_free, col_loss_free = st.columns([1.5, 1])
 
@@ -1877,7 +1875,7 @@ elif menu == "📈 1. 마법의 선 긋기":
                     st.markdown("#### 🖍️ 요정이 쫙! 그어준 마법의 선")
                     fig_free = go.Figure()
                     fig_free.add_trace(go.Scatter(x=free_x, y=free_y, mode='markers', name='내가 만든 점들', marker=dict(size=15, color='green')))
-                    fig_free.add_trace(go.Scatter(x=free_x, y=free_y_pred, mode='lines', name='AI가 찾은 완벽한 선', line=dict(color='gold', width=5)))
+                    fig_free.add_trace(go.Scatter(x=free_x, y=free_y_pred, mode='lines', name='AI가 찾은 가장 잘 맞는 선', line=dict(color='gold', width=5)))
 
                     for i in range(len(free_x)):
                         fig_free.add_trace(go.Scatter(x=[free_x[i], free_x[i]], y=[free_y[i], free_y_pred[i]], mode='lines', line=dict(color='lightgray', dash='dash'), showlegend=False))
@@ -1992,6 +1990,7 @@ elif menu == "📈 1. 마법의 선 긋기":
             diff = abs(guess_price - real_price)
             if diff < 80:
                 st.balloons()
+                play_sfx(SFX_BADGE_FILE)  # 미션 성공 효과음 (key)
                 st.success(f"손님: '정답! 딱 좋은 가격이에요!' 🎉 (참고 시세: 약 {real_price:.0f}원)")
             else:
                 st.warning(f"손님: '음... 조금 비싸거나 싼 것 같은데요?' (참고 시세: 약 {real_price:.0f}원)")
@@ -2157,6 +2156,7 @@ elif menu == "⛰️ 2. 보물찾기 산":
             if abs(path_x[-1]) < 0.5:
                 st.success("🎉 만세! 완벽한 발걸음으로 산 바닥에 있는 보물상자를 찾았어요!")
                 st.balloons()
+                play_sfx(SFX_BADGE_FILE)  # 미션 성공 효과음 (key)
                 md_html("""
                 <div style="background:#EDE7F6; border-left:5px solid #7E57C2; border-radius:14px; padding:16px 20px; margin-top:12px;">
                     <b>🏷️ 오늘 배운 것</b><br>
@@ -2238,6 +2238,7 @@ elif menu == "⛰️ 2. 보물찾기 산":
                          "그래서 AI도 '적당한 보폭'을 찾는 게 아주 중요하답니다.")
         elif st.session_state["gd_success"]:
             st.balloons()
+            play_sfx(SFX_BADGE_FILE)  # 미션 성공 효과음 (key)
             st.success(f"🎉 보물상자 발견! 총 {st.session_state['gd_steps']}걸음 만에 도착했어요!")
             award_badge(1)
 
@@ -2695,6 +2696,7 @@ elif menu == "🌳 3. 스무고개 탐정":
 
             if n_asked <= 3:
                 st.balloons()
+                play_sfx(SFX_BADGE_FILE)  # 미션 성공 효과음 (key)
                 st.markdown(f"### 🎉 명탐정! 단 **{n_asked}번**의 질문으로 범인을 찾았어요!")
                 award_badge(2)
 
@@ -3410,8 +3412,10 @@ elif menu == "🧠 6. 똑똑한 생각 주머니":
         st.markdown("### 🌉 어? 나 이거 이미 알아!")
         md_html("""
         <div style='font-size:19px; line-height:1.9; background:#FFF8E1; border-radius:14px; padding:18px 22px;'>
-        친구 여러 명한테 "이 옷 어때?"라고 물어보고, <b>다들 좋다고 하면</b> 사고, <b>다들 별로라고 하면</b> 안 사죠?<br><br>
-        인공신경망도 비슷해요. 여러 '판단 담당'들이 각자 의견을 내고, 그 의견들을 <b>모아서</b> 최종 결론을 내려요.
+        요리 점수를 매길 때, <b>맛 담당</b>은 맛에 점수를 주고, <b>영양 담당</b>은 영양에 점수를 주고,
+        <b>모양 담당</b>은 모양에 점수를 주죠? 그리고 이 <b>점수들을 하나로 합쳐서</b> 최종 점수를 정해요.<br><br>
+        인공신경망도 똑같아요. 여러 '판단 담당(뉴런)'이 <b>저마다 다른 부분</b>을 보고 점수를 매긴 다음,
+        그 점수들을 <b>합쳐서</b> 하나의 결론을 내려요. (손드는 다수결 투표가 아니라, <b>점수를 곱하고 더해 합치는</b> 방식이에요!)
         </div>
         """)
 
@@ -3465,32 +3469,35 @@ elif menu == "🧠 6. 똑똑한 생각 주머니":
         st.write("")
         # ── ② 혼자 판단 vs 여럿이 판단: 왜 여러 뉴런을 쓸까? ─────────────
         st.markdown("#### 🔍 요정이 왜 여러 명이나 필요할까요? 버튼을 눌러 비교해봐요!")
+        st.caption("요정들은 손을 들어 '다수결 투표'를 하는 게 아니라, 각자 매긴 **점수를 하나로 합쳐서** 결론을 내요.")
         nn_ex_choice = st.radio(
-            "\"이 옷을 살까, 말까?\" 고민될 때, 누구에게 물어볼까요?",
-            ["🙋 친구 1명에게만 물어보기", "🙋‍♀️🙋🙋‍♂️ 친구 3명에게 물어보기"],
+            "튼튼 점수를 매길 때, 요정 몇 명이 볼까요?",
+            ["🧚 요정 1명이 볼 때", "🧚‍♀️🧚🧚‍♂️ 요정 3명이 볼 때"],
             horizontal=True, key="nn_intro_compare")
 
-        if nn_ex_choice.startswith("🙋 친구 1명"):
+        if nn_ex_choice.startswith("🧚 요정 1명"):
             md_html("""
             <div style='background:#FFEBEE; border-radius:12px; padding:14px 18px; text-align:center;'>
-                <span style='font-size:30px;'>🙋</span> "음... 별로야!" →
-                <b style='color:#C62828;'>안 산다!</b><br>
-                <span style='font-size:13px; color:#666;'>그런데 이 친구가 그날 기분이 나빴다면? 판단이 틀릴 수도 있어요 😥</span>
+                <span style='font-size:30px;'>🧚</span> "운동만 보고 → <b style='color:#C62828;'>80점!</b>"<br>
+                <span style='font-size:13px; color:#666;'>운동 하나만 보는 요정이라, 잠을 못 잔 건 놓쳐요.
+                이 요정이 놓친 부분은 아무도 챙겨주지 못해요 😥</span>
             </div>
             """)
-            st.error("**한 명**의 의견만 들으면, 그 한 명이 실수했을 때 결론도 통째로 틀려버려요.")
+            st.error("요정이 **한 명**뿐이면, 그 요정이 보는 한 가지 관점만 반영돼요. 놓친 부분을 메워줄 사람이 없어요.")
         else:
             md_html("""
             <div style='background:#E8F5E9; border-radius:12px; padding:14px 18px; text-align:center;'>
-                <span style='font-size:30px;'>🙋‍♀️</span> "좋아!" &nbsp;
-                <span style='font-size:30px;'>🙋</span> "별로야" &nbsp;
-                <span style='font-size:30px;'>🙋‍♂️</span> "좋아!" →
-                <b style='color:#2E7D32;'>2 대 1, 산다!</b><br>
-                <span style='font-size:13px; color:#666;'>한 명이 실수해도, 여러 의견을 모으면 더 믿을 만한 결론이 나와요 ✨</span>
+                <span style='font-size:26px;'>🧚‍♀️</span> 운동 요정 "+40점" &nbsp;
+                <span style='font-size:26px;'>🧚</span> 잠 요정 "+30점" &nbsp;
+                <span style='font-size:26px;'>🧚‍♂️</span> 피자 요정 "−10점"<br>
+                <b style='color:#2E7D32;'>세 점수를 합치면 → 60점!</b><br>
+                <span style='font-size:13px; color:#666;'>요정마다 <b>보는 관점이 달라요.</b>
+                각자의 점수를 <b>합치면</b> 운동·잠·피자를 골고루 따진 똑똑한 결론이 나와요 ✨</span>
             </div>
             """)
-            st.success("**여러 명**의 판단을 모으면 한 명의 실수를 이겨낼 수 있어요! "
-                       "인공신경망이 뉴런을 **여러 개** 쓰는 이유가 바로 이거예요.")
+            st.success("여러 요정이 각자 다른 관점의 점수를 매기고, 그 점수를 **모두 합쳐서** 결론을 내요. "
+                       "이렇게 **여러 관점을 곱하고 더해 합치는 것**이 인공신경망이 뉴런을 여러 개 쓰는 이유예요. "
+                       "(손드는 다수결 투표가 아니에요!)")
 
         st.write("")
         st.info("💡 피자를 먹고 뛰어놀면, **뉴런 요정 한 명**이 '피자 점수'와 '운동 점수'를 자기만의 힘(가중치)으로 곱해서 더한 다음 건강 점수를 알려줘요.")
@@ -3631,6 +3638,7 @@ elif menu == "🧠 6. 똑똑한 생각 주머니":
 
         if power >= 100:
             st.balloons()
+            play_sfx(SFX_BADGE_FILE)  # 미션 성공 효과음 (key)
             st.success("🚀 파워 100 달성! 세 요정과 출력 요정이 힘을 합쳐 네오가 우주로 로켓 발사!! 🎉")
             award_badge(5)
             if len(st.session_state["badges"]) >= 6:
@@ -3921,6 +3929,7 @@ elif menu == "⚖️ AI를 똑똑하게 쓰려면?":
             st.progress(ox_correct / len(_OX_QUIZ))
             if ox_correct == len(_OX_QUIZ):
                 st.balloons()
+                play_sfx(SFX_BADGE_FILE)  # 미션 성공 효과음 (key)
                 md_html("""
                 <div style='background:#E0F2F1; border:3px solid #00897B; border-radius:16px;
                             padding:18px; text-align:center;'>
@@ -3946,6 +3955,7 @@ elif menu == "⚖️ AI를 똑똑하게 쓰려면?":
 
         if all([p1, p2, p3, p4]):
             st.balloons()
+            play_sfx(SFX_BADGE_FILE)  # 미션 성공 효과음 (key)
             _pledge_name = st.session_state.get("student_name", "").strip() or "꼬마 탐험대원"
             md_html(f"""
             <div style='background:#FFFDE7; border:3px double #00897B; border-radius:18px;
@@ -3998,6 +4008,7 @@ elif menu == "🔧 로봇 네오 종합 점검 (복습)":
         correct_first_try = total - wrong if wrong <= total else 0
 
         st.balloons()
+        play_sfx(SFX_BADGE_FILE)  # 미션 성공 효과음 (key)
         st.success("🎉 로봇 네오의 부품 6개를 모두 점검했어요! 네오가 다시 깨어났습니다!")
 
         # 점검 완료된 부품들을 이미지로 나란히 보여주기
@@ -4223,6 +4234,7 @@ elif menu == "🏆 탐험 완료 (수료증)":
 
         st.image(cert_img, **_STRETCH)
         st.balloons()
+        play_sfx(SFX_BADGE_FILE)  # 미션 성공 효과음 (key)
 
         st.write("")
         render_share_buttons(
@@ -4239,7 +4251,7 @@ elif menu == "👩‍🏫 선생님 방 (학습 분석)":
                "#455A64")
 
     st.info("🔒 이 방은 선생님용이에요. 비밀번호를 입력하면 학급 전체의 학습 현황을 볼 수 있어요. "
-            "(기본 비밀번호는 코드 상단 TEACHER_PASSWORD 값이며, 바꿀 수 있습니다.)")
+            "기본 비밀번호는 teacher입니다.")
 
     pw = st.text_input("비밀번호", type="password", key="teacher_pw")
     if pw != TEACHER_PASSWORD:
