@@ -14,8 +14,50 @@ import textwrap
 from datetime import datetime, timezone, timedelta
 from PIL import Image, ImageDraw, ImageFont
 
+# ── media 폴더 위치 찾기 (페이지 아이콘에 쓰기 위해 가장 먼저 계산한다) ──
+APP_DIR_ROOT = os.path.dirname(os.path.abspath(__file__))
+
+
+def _find_media_root():
+    """media 폴더 위치를 찾는다.
+    - 배포 폴더 구조: (루트)/program/app.py + (루트)/media/...  → 상위 폴더의 media
+    - 혹시 app.py와 같은 폴더에 media를 두고 실행해도 동작하도록 함께 지원한다."""
+    candidates = [
+        os.path.join(os.path.dirname(APP_DIR_ROOT), "media"),  # ../media (기본 배포 구조)
+        os.path.join(APP_DIR_ROOT, "media"),                    # ./media
+    ]
+    for c in candidates:
+        if os.path.isdir(c):
+            return c
+    return candidates[0]
+
+
+MEDIA_DIR = _find_media_root()
+BADGE_ASSET_DIR = os.path.join(MEDIA_DIR, "images", "badges")
+AUDIO_ASSET_DIR = os.path.join(MEDIA_DIR, "sound")
+IMAGE_ASSET_DIR = os.path.join(MEDIA_DIR, "images")
+MOVIE_DIR = os.path.join(MEDIA_DIR, "movie")
+
+
+def _load_page_icon():
+    """브라우저 탭 아이콘으로 쓸 로봇 마스코트 이미지를 불러온다.
+    파일이 없으면 기본 이모지(🧸)로 안전하게 대체한다."""
+    icon_path = os.path.join(IMAGE_ASSET_DIR, "robot_mascot.png")
+    try:
+        if os.path.exists(icon_path):
+            return Image.open(icon_path)
+    except Exception:
+        pass
+    return "🧸"
+
+
 # 1. 페이지 설정
-st.set_page_config(page_title="손끝에서 배우는 인공지능 원리 AI 탐험대 (초등 6학년)", layout="wide", page_icon="🧸", initial_sidebar_state="expanded")
+st.set_page_config(
+    page_title="손끝에서 배우는 인공지능 원리 AI 탐험대 (초등 6학년)",
+    layout="wide",
+    page_icon=_load_page_icon(),
+    initial_sidebar_state="expanded",
+)
 
 
 def md_html(s):
@@ -81,6 +123,33 @@ section[data-testid="stSidebar"] h1 { font-family: 'Jua', sans-serif !important;
 section[data-testid="stSidebar"] label { color: #EAF6FF !important; }
 section[data-testid="stSidebar"] .stRadio > div { gap: 4px; }
 section[data-testid="stSidebar"] .stRadio label { background: #24365C; border-radius: 12px; padding: 8px 10px; margin-bottom: 2px; }
+
+/* ── 사이드바 폭을 줄여 본문(활동 화면)을 더 넓게 쓴다 (태블릿 대응) ── */
+section[data-testid="stSidebar"][aria-expanded="true"] { width: 17rem !important; min-width: 17rem !important; }
+section[data-testid="stSidebar"] > div { width: 17rem !important; }
+section[data-testid="stSidebar"] h1 { font-size: 1.35rem !important; }
+section[data-testid="stSidebar"] .stRadio label { padding: 6px 9px; font-size: 0.92rem; }
+
+/* ── 화면을 컴팩트하게: 여백을 줄여 한 화면에 더 많이 담기게 한다 ── */
+.block-container { padding-top: 1.2rem !important; padding-bottom: 1.5rem !important; }
+.block-container h1 { margin-top: 0.2rem !important; margin-bottom: 0.4rem !important; }
+.block-container h2 { margin-top: 0.5rem !important; margin-bottom: 0.35rem !important; }
+.block-container h3 { margin-top: 0.5rem !important; margin-bottom: 0.3rem !important; }
+.block-container h4 { margin-top: 0.4rem !important; margin-bottom: 0.25rem !important; }
+.block-container hr { margin-top: 0.7rem !important; margin-bottom: 0.7rem !important; }
+[data-testid="stVerticalBlock"] { gap: 0.55rem !important; }
+.stAlert { padding-top: 0.6rem !important; padding-bottom: 0.6rem !important; }
+[data-testid="stExpander"] { margin-bottom: 0.4rem !important; }
+
+/* 우리가 만든 '메뉴 접기/열기' 버튼 (본문 상단 고정) */
+#ai-sidebar-toggle {
+    position: fixed; top: 8px; left: 10px; z-index: 999990;
+    background: #FFC93C; color: #1B2A4A; border: none;
+    border-radius: 999px; padding: 8px 16px; cursor: pointer;
+    font-family: 'Jua', sans-serif; font-size: 15px; font-weight: 700;
+    box-shadow: 0 3px 0 #d9a700;
+}
+#ai-sidebar-toggle:active { transform: translateY(2px); box-shadow: 0 1px 0 #d9a700; }
 
 /* 버튼 */
 .stButton>button {
@@ -201,28 +270,7 @@ def add_sweetness_axis_hints(fig):
     return fig
 
 
-APP_DIR_ROOT = os.path.dirname(os.path.abspath(__file__))
-
-
-def _find_media_root():
-    """media 폴더 위치를 찾는다.
-    - 배포 폴더 구조: (루트)/program/app.py + (루트)/media/...  → 상위 폴더의 media
-    - 혹시 app.py와 같은 폴더에 media를 두고 실행해도 동작하도록 함께 지원한다."""
-    candidates = [
-        os.path.join(os.path.dirname(APP_DIR_ROOT), "media"),  # ../media (기본 배포 구조)
-        os.path.join(APP_DIR_ROOT, "media"),                    # ./media
-    ]
-    for c in candidates:
-        if os.path.isdir(c):
-            return c
-    return candidates[0]
-
-
-MEDIA_DIR = _find_media_root()
-BADGE_ASSET_DIR = os.path.join(MEDIA_DIR, "images", "badges")
-AUDIO_ASSET_DIR = os.path.join(MEDIA_DIR, "sound")
-IMAGE_ASSET_DIR = os.path.join(MEDIA_DIR, "images")
-MOVIE_DIR = os.path.join(MEDIA_DIR, "movie")
+# (media 폴더 경로 및 APP_DIR_ROOT는 페이지 아이콘 설정을 위해 파일 상단에서 이미 정의했다)
 
 # =========================================================
 # 오디오 설정 — 파일명을 여기서 한 번에 바꿀 수 있어요.
@@ -1002,6 +1050,14 @@ with st.sidebar:
         visible_menus,
         key="nav_menu"
     )
+
+    # 사이드바 메뉴로 화면을 바꾼 경우에도 '맨 위부터' 보이게 한다.
+    # (이전에는 버튼 이동일 때만 맨 위로 갔고, 메뉴 클릭 시에는
+    #  이전 스크롤 위치가 남아 화면 중간부터 보이는 문제가 있었다.)
+    if st.session_state.get("_last_menu") != menu:
+        st.session_state["_last_menu"] = menu
+        st.session_state["_scroll_top"] = True
+
     st.divider()
 
     # 🗺️ 탐험 진행도
@@ -1116,16 +1172,104 @@ def next_section_button(current_menu, key_suffix):
             go_to(target)
 
 
+# ── 화면 안에 '메뉴 접기/열기' 버튼을 띄운다 ────────────────────────
+# 태블릿에서 사이드바가 화면을 많이 차지해, 필요할 때 접어서
+# 활동 화면(그래프·조작기)을 넓게 볼 수 있도록 한다.
+components.html(
+    """
+    <script>
+    (function () {
+        const doc = window.parent.document;
+
+        function findSidebar() {
+            return doc.querySelector('section[data-testid="stSidebar"]')
+                || doc.querySelector('[data-testid="stSidebar"]');
+        }
+
+        function isOpen(sb) {
+            if (!sb) return false;
+            if (sb.getAttribute('aria-expanded') === 'false') return false;
+            return sb.offsetWidth > 40;
+        }
+
+        function setOpen(open) {
+            const sb = findSidebar();
+            if (!sb) return;
+            if (open) {
+                sb.style.removeProperty('display');
+                sb.style.removeProperty('width');
+                sb.style.removeProperty('min-width');
+                sb.style.removeProperty('margin-left');
+                sb.style.transform = 'none';
+                sb.setAttribute('aria-expanded', 'true');
+            } else {
+                sb.style.width = '0px';
+                sb.style.minWidth = '0px';
+                sb.style.marginLeft = '0px';
+                sb.style.transform = 'translateX(-100%)';
+                sb.setAttribute('aria-expanded', 'false');
+            }
+            const btn = doc.getElementById('ai-sidebar-toggle');
+            if (btn) btn.innerHTML = open ? '◀ 메뉴 접기' : '☰ 메뉴 열기';
+        }
+
+        function makeButton() {
+            if (doc.getElementById('ai-sidebar-toggle')) return;
+            const btn = doc.createElement('button');
+            btn.id = 'ai-sidebar-toggle';
+            btn.innerHTML = '◀ 메뉴 접기';
+            btn.onclick = function () {
+                const sb = findSidebar();
+                setOpen(!isOpen(sb));
+            };
+            doc.body.appendChild(btn);
+            // 현재 상태에 맞게 글자 맞추기
+            const sb = findSidebar();
+            btn.innerHTML = isOpen(sb) ? '◀ 메뉴 접기' : '☰ 메뉴 열기';
+        }
+
+        makeButton();
+        // Streamlit이 화면을 다시 그려도 버튼이 유지되도록 한 번 더 확인
+        setTimeout(makeButton, 400);
+        setTimeout(makeButton, 1200);
+    })();
+    </script>
+    """,
+    height=0,
+)
+
 # 다른 화면으로 막 이동한 직후라면, 화면을 맨 위로 스크롤한다
-# (버튼으로 탭 이동 시 이전 스크롤 위치가 남아 중간부터 보이는 문제 해결)
+# (탭/메뉴 이동 시 이전 스크롤 위치가 남아 중간부터 보이는 문제 해결)
 if st.session_state.pop("_scroll_top", False):
     components.html(
         """
         <script>
+        (function () {
             const doc = window.parent.document;
-            const main = doc.querySelector('section.main') || doc.querySelector('[data-testid="stMain"]');
-            if (main) { main.scrollTo({top: 0, behavior: 'auto'}); }
-            window.parent.scrollTo({top: 0, behavior: 'auto'});
+            function toTop() {
+                const targets = [
+                    doc.querySelector('section.main'),
+                    doc.querySelector('[data-testid="stMain"]'),
+                    doc.querySelector('[data-testid="stAppViewContainer"]'),
+                    doc.querySelector('.main'),
+                    doc.scrollingElement,
+                    doc.documentElement,
+                    doc.body
+                ];
+                targets.forEach(function (el) {
+                    if (el && typeof el.scrollTo === 'function') {
+                        el.scrollTo({top: 0, behavior: 'auto'});
+                    }
+                    if (el) { el.scrollTop = 0; }
+                });
+                window.parent.scrollTo({top: 0, behavior: 'auto'});
+            }
+            toTop();
+            // 화면이 다 그려진 뒤에도 확실히 맨 위로
+            setTimeout(toTop, 120);
+            setTimeout(toTop, 400);
+            setTimeout(toTop, 900);
+        })();
         </script>
         """,
         height=0,
