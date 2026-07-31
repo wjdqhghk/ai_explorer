@@ -126,7 +126,7 @@ section[data-testid="stSidebar"] .stRadio label { background: #24365C; border-ra
 
 /* ── 사이드바 폭: 메뉴 글자가 절대 두 줄로 접히지 않는 최소 폭(206px)으로 고정 ──
    기본값 336px보다는 훨씬 좁아 본문(탐험 화면)이 넓어지고,
-   가장 긴 메뉴("🔧 로봇 네오 종합 점검 (복습)")도 한 줄에 들어간다.
+   가장 긴 메뉴("🔧 로봇 네오 종합 점검")도 한 줄에 들어간다.
    Streamlit 버전마다 폭을 잡는 요소가 달라서 여러 선택자를 함께 지정한다. */
 :root, .stApp { --sidebar-width: 206px !important; }
 section[data-testid="stSidebar"],
@@ -137,14 +137,81 @@ div[data-testid="stSidebar"] {
     flex: 0 0 206px !important;
 }
 section[data-testid="stSidebar"] > div,
-div[data-testid="stSidebarContent"],
-div[data-testid="stSidebarUserContent"] {
+div[data-testid="stSidebarContent"] {
     width: 206px !important;
     min-width: 206px !important;
+    max-width: 206px !important;
 }
 /* 아이들이 실수로 폭을 잡아끌지 않도록 크기 조절 손잡이는 숨긴다 */
 [data-testid="stSidebarResizeHandle"],
 [class*="ResizeHandle"] { display: none !important; }
+
+/* ── ★ 잘림 방지: 사이드바 '안쪽' 컨테이너들도 모두 줄어든 폭을 따라가게 강제 ──
+   사이드바 박스만 좁아지고 내용물 컨테이너가 예전 폭(336px)을 유지하면
+   진행바·버튼·안내글이 오른쪽으로 삐져나가 잘려 보인다. 이를 막는다. */
+section[data-testid="stSidebar"] > div,
+section[data-testid="stSidebar"] > div > div,
+section[data-testid="stSidebar"] [data-testid="stSidebarContent"],
+section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"],
+section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] > div,
+section[data-testid="stSidebar"] [data-testid="stVerticalBlock"],
+section[data-testid="stSidebar"] [data-testid="stVerticalBlockBorderWrapper"],
+section[data-testid="stSidebar"] [data-testid="stElementContainer"],
+section[data-testid="stSidebar"] [data-testid="stHorizontalBlock"],
+section[data-testid="stSidebar"] [data-testid="stColumn"],
+section[data-testid="stSidebar"] .stMarkdown,
+section[data-testid="stSidebar"] .element-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+}
+/* 그 무엇도 사이드바 밖으로 넘치지 않게 */
+section[data-testid="stSidebar"] * { max-width: 100% !important; }
+
+/* 진행바(로봇 조립 현황)를 사이드바 폭 안에 맞추고 살짝 얇게 */
+section[data-testid="stSidebar"] .stProgress,
+section[data-testid="stSidebar"] .stProgress > div,
+section[data-testid="stSidebar"] .stProgress > div > div,
+section[data-testid="stSidebar"] .stProgress > div > div > div {
+    width: 100% !important; max-width: 100% !important; min-width: 0 !important;
+}
+section[data-testid="stSidebar"] .stProgress > div > div { height: 9px !important; border-radius: 999px !important; }
+
+/* 버튼 글자가 잘리지 않도록: 폭에 맞춰 줄바꿈 허용 + 글자 축소 */
+section[data-testid="stSidebar"] .stButton { width: 100% !important; }
+section[data-testid="stSidebar"] .stButton>button {
+    width: 100% !important; min-width: 0 !important;
+    white-space: normal !important; word-break: keep-all;
+    line-height: 1.25 !important; padding: 0.45em 0.4em !important;
+}
+section[data-testid="stSidebar"] .stButton>button p { font-size: 0.72rem !important; white-space: normal !important; }
+
+/* 안내 문구(캡션)는 작게 + 줄바꿈해서 절대 잘리지 않게 */
+section[data-testid="stSidebar"] [data-testid="stCaptionContainer"],
+section[data-testid="stSidebar"] [data-testid="stCaptionContainer"] p {
+    white-space: pre-line !important;
+    word-break: keep-all !important;
+    overflow-wrap: break-word !important;
+    line-height: 1.35 !important;
+}
+/* 로봇 부품 아이콘 줄이 넘치지 않게 */
+section[data-testid="stSidebar"] img { max-width: 100% !important; height: auto !important; }
+
+/* 좁은 사이드바에서는 2칸 배치(초기화/취소 버튼)를 세로로 쌓아 글자가 안 잘리게 */
+section[data-testid="stSidebar"] [data-testid="stHorizontalBlock"] { flex-direction: column !important; gap: 4px !important; }
+section[data-testid="stSidebar"] [data-testid="stColumn"] { width: 100% !important; flex: 1 1 100% !important; }
+
+/* 알림(경고) 문구도 폭 안에서 줄바꿈 */
+section[data-testid="stSidebar"] .stAlert { padding: 8px 10px !important; }
+section[data-testid="stSidebar"] .stAlert p {
+    font-size: 0.7rem !important; line-height: 1.35 !important;
+    white-space: pre-line !important; word-break: keep-all !important;
+}
+
+/* 밝은 배경 안내 카드의 글자는 흰색 강제 규칙에서 빼서 잘 보이게 한다 */
+section[data-testid="stSidebar"] .review-tip,
+section[data-testid="stSidebar"] .review-tip * { color: #4527A0 !important; }
 
 /* ── 좁아진 폭에 맞춰 사이드바 글자 크기 조정 ── */
 section[data-testid="stSidebar"] div[data-testid="stSidebarUserContent"] { padding: 0.5rem 0.5rem 2rem 0.5rem !important; }
@@ -1131,7 +1198,7 @@ MENU_OPTIONS = [
     "🎨 5. 비슷한 친구끼리",
     "🧠 6. 똑똑한 생각 주머니",
     "⚖️ AI를 똑똑하게 쓰려면?",
-    "🔧 로봇 네오 종합 점검 (복습)",
+    "🔧 로봇 네오 종합 점검",
     "🏆 탐험 완료 (수료증)",
     "👩‍🏫 선생님 방 (학습 분석)",
 ]
@@ -1190,10 +1257,10 @@ with st.sidebar:
     st.caption(f"부품 {collected_count} / {len(ALL_BADGES)}개 모음")
 
     icon_row = " ".join(
-        badge_img_tag(i, size=34, grayscale=(name not in collected_names))
+        badge_img_tag(i, size=27, grayscale=(name not in collected_names))
         for i, (icon, name, filename, part, desc) in enumerate(ALL_BADGES)
     )
-    st.markdown(f"<div style='display:flex; gap:6px; flex-wrap:wrap;'>{icon_row}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='display:flex; gap:4px; flex-wrap:wrap; max-width:100%;'>{icon_row}</div>", unsafe_allow_html=True)
 
     st.divider()
     if collected_names:
@@ -1201,24 +1268,24 @@ with st.sidebar:
         for i, (icon, name, filename, part, desc) in enumerate(ALL_BADGES):
             if name in collected_names:
                 md_html(f"""
-                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-                    {badge_img_tag(i, size=30)}
-                    <span style="font-size:14px;">{part}</span>
+                <div style="display:flex; align-items:center; gap:6px; margin-bottom:5px;">
+                    {badge_img_tag(i, size=22)}
+                    <span style="font-size:0.72rem; word-break:keep-all;">{part}</span>
                 </div>
                 """)
     else:
-        st.caption("게임을 클리어하면 로봇 부품을 받아요! 🌟")
+        st.caption("게임을 깨면 부품을 받아요! 🌟")
 
     # 6개 부품을 모두 모으면 복습 게임을 눈에 띄게 안내
     if collected_count >= 6:
         st.divider()
         md_html("""
-        <div style="background:#EDE7F6; border:2px solid #7E57C2; border-radius:14px; padding:12px; text-align:center;">
-            <div style="font-size:14px; color:#EAF6FF;">🎓 이제 배운 걸 정리해볼까요?</div>
+        <div class="review-tip" style="background:#EDE7F6; border:2px solid #7E57C2; border-radius:12px; padding:8px; text-align:center;">
+            <div style="font-size:0.72rem; line-height:1.3; word-break:keep-all;">🎓 이제 배운 걸<br>정리해볼까요?</div>
         </div>
         """)
         if st.button("🔧 복습 미션 도전하기", key="side_go_review", **_STRETCH):
-            go_to("🔧 로봇 네오 종합 점검 (복습)")
+            go_to("🔧 로봇 네오 종합 점검")
 
     bonus_names = st.session_state["bonus_badges"]
     if bonus_names:
@@ -1229,7 +1296,7 @@ with st.sidebar:
     # 컴퓨터실처럼 한 대의 기기를 여러 학생이 이어서 쓸 때를 위한 전체 초기화 버튼
     st.divider()
     if st.session_state.get("_confirm_reset"):
-        st.warning("정말요? 모은 로봇 부품과 **사전·사후 검사 결과**가 모두 사라져요! (다음 친구가 처음부터 다시 할 수 있어요.)")
+        st.warning("정말요?\n모은 부품과 검사 결과가\n모두 사라져요!")
         rc1, rc2 = st.columns(2)
         with rc1:
             if st.button("✅ 초기화", key="reset_yes", **_STRETCH):
@@ -1269,10 +1336,10 @@ with st.sidebar:
                 st.session_state["_confirm_reset"] = False
                 st.rerun()
     else:
-        if st.button("🔄 다음 친구를 위해 초기화", key="reset_all", **_STRETCH):
+        if st.button("🔄 처음부터 다시", key="reset_all", **_STRETCH):
             st.session_state["_confirm_reset"] = True
             st.rerun()
-        st.caption("다음 학생이 이어서 쓸 때 눌러주세요. (부품 + 사전·사후 검사 결과가 모두 초기화돼요.)")
+        st.caption("다음 친구가 쓸 때 눌러요.\n부품·검사 결과가 모두 지워져요.")
 
 
 NEXT_SECTION = {
@@ -1412,7 +1479,7 @@ if menu == "🏠 탐험 본부 (홈)":
         home_cta1, home_cta2 = st.columns(2)
         with home_cta1:
             if st.button("🔧 복습 미션 도전하기", key="home_go_review", **_STRETCH):
-                go_to("🔧 로봇 네오 종합 점검 (복습)")
+                go_to("🔧 로봇 네오 종합 점검")
         with home_cta2:
             if st.button("🏆 수료증 받으러 가기 🌟", key="home_go_cert", **_STRETCH):
                 go_to("🏆 탐험 완료 (수료증)")
@@ -3883,7 +3950,7 @@ elif menu == "🧠 6. 똑똑한 생각 주머니":
                 cta1, cta2 = st.columns(2)
                 with cta1:
                     if st.button("🔧 복습 미션 도전!", key="nn_to_review", **_STRETCH):
-                        go_to("🔧 로봇 네오 종합 점검 (복습)")
+                        go_to("🔧 로봇 네오 종합 점검")
                 with cta2:
                     if st.button("🏆 수료증 받기", key="nn_to_cert", **_STRETCH):
                         go_to("🏆 탐험 완료 (수료증)")
@@ -4212,7 +4279,7 @@ elif menu == "⚖️ AI를 똑똑하게 쓰려면?":
 
 
 # --- [복습 게임: 로봇 네오 종합 점검 미션] ---
-elif menu == "🔧 로봇 네오 종합 점검 (복습)":
+elif menu == "🔧 로봇 네오 종합 점검":
     all_done = len(st.session_state["badges"]) >= 6
     hero_card("🔧", "로봇 네오 종합 점검 미션",
                "6가지 인공지능 원리를 모두 떠올려 로봇 네오의 부품을 하나씩 고쳐주세요!",
