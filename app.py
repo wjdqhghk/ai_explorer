@@ -124,33 +124,32 @@ section[data-testid="stSidebar"] label { color: #EAF6FF !important; }
 section[data-testid="stSidebar"] .stRadio > div { gap: 4px; }
 section[data-testid="stSidebar"] .stRadio label { background: #24365C; border-radius: 12px; padding: 8px 10px; margin-bottom: 2px; }
 
-/* ── 사이드바 폭: 메뉴 글자가 절대 두 줄로 접히지 않는 최소 폭(206px)으로 고정 ──
+/* ── 사이드바 폭: 메뉴 글자가 잘리지도, 두 줄로 접히지도 않는 폭(248px)으로 고정 ──
    기본값 336px보다는 훨씬 좁아 본문(탐험 화면)이 넓어지고,
-   가장 긴 메뉴("🔧 로봇 네오 종합 점검")도 한 줄에 들어간다.
+   가장 긴 메뉴("👩‍🏫 선생님 방 (학습 분석)")까지 잘리지 않고 한 줄에 들어간다.
    Streamlit 버전마다 폭을 잡는 요소가 달라서 여러 선택자를 함께 지정한다. */
-:root, .stApp { --sidebar-width: 206px !important; }
+:root, .stApp { --sidebar-width: 248px !important; }
 section[data-testid="stSidebar"],
 div[data-testid="stSidebar"] {
-    width: 206px !important;
-    min-width: 206px !important;
-    max-width: 206px !important;
-    flex: 0 0 206px !important;
+    width: 248px !important;
+    min-width: 248px !important;
+    max-width: 248px !important;
+    flex: 0 0 248px !important;
 }
-section[data-testid="stSidebar"] > div,
 div[data-testid="stSidebarContent"] {
-    width: 206px !important;
-    min-width: 206px !important;
-    max-width: 206px !important;
+    width: 248px !important;
+    min-width: 248px !important;
+    max-width: 248px !important;
 }
-/* 아이들이 실수로 폭을 잡아끌지 않도록 크기 조절 손잡이는 숨긴다 */
-[data-testid="stSidebarResizeHandle"],
-[class*="ResizeHandle"] { display: none !important; }
+/* ── ★ 폭 조절 손잡이 레이어 제거 ──
+   이 레이어는 사이드바 전체를 덮는 투명 div라서, 폭을 건드리면
+   메뉴 클릭과 스크롤을 통째로 가로챈다. 아예 없애 버린다. */
+section[data-testid="stSidebar"] > div:not([data-testid="stSidebarContent"]) { display: none !important; }
+[data-testid="stSidebarResizeHandle"] { display: none !important; }
 
 /* ── ★ 잘림 방지: 사이드바 '안쪽' 컨테이너들도 모두 줄어든 폭을 따라가게 강제 ──
    사이드바 박스만 좁아지고 내용물 컨테이너가 예전 폭(336px)을 유지하면
    진행바·버튼·안내글이 오른쪽으로 삐져나가 잘려 보인다. 이를 막는다. */
-section[data-testid="stSidebar"] > div,
-section[data-testid="stSidebar"] > div > div,
 section[data-testid="stSidebar"] [data-testid="stSidebarContent"],
 section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"],
 section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] > div,
@@ -166,8 +165,22 @@ section[data-testid="stSidebar"] .element-container {
     min-width: 0 !important;
     box-sizing: border-box !important;
 }
-/* 그 무엇도 사이드바 밖으로 넘치지 않게 */
-section[data-testid="stSidebar"] * { max-width: 100% !important; }
+/* 사이드바 밖으로 넘치기 쉬운 요소들만 콕 집어 제한한다.
+   (예전처럼 * 전체에 걸면 내부 동작까지 건드릴 수 있어 위험하다.) */
+section[data-testid="stSidebar"] p,
+section[data-testid="stSidebar"] img,
+section[data-testid="stSidebar"] .stMarkdown,
+section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] { max-width: 100% !important; }
+
+/* ── 스크롤·터치가 정상 동작하도록 명시적으로 보장 ── */
+section[data-testid="stSidebar"] [data-testid="stSidebarContent"] {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    height: 100% !important;
+}
+section[data-testid="stSidebar"] { pointer-events: auto !important; }
+section[data-testid="stSidebar"] .stRadio label { cursor: pointer !important; touch-action: manipulation !important; }
 
 /* 진행바(로봇 조립 현황)를 사이드바 폭 안에 맞추고 살짝 얇게 */
 section[data-testid="stSidebar"] .stProgress,
@@ -233,7 +246,6 @@ section[data-testid="stSidebar"] .stRadio label {
     font-size: 0.72rem !important;
     line-height: 1.2 !important;
     white-space: nowrap !important;
-    overflow: hidden !important;
     flex-wrap: nowrap !important;
     align-items: center !important;
     letter-spacing: -0.4px;
@@ -315,17 +327,20 @@ header[data-testid="stAppHeader"],
 footer,
 [data-testid="stAppViewerBadge"],
 [class*="viewerBadge"],
-[class*="_profileContainer"],
-[class*="_viewerBadge"],
 [data-testid="manage-app-button"] { display: none !important; visibility: hidden !important; }
-/* 사이드바를 다시 펼치는 버튼만은 계속 보이게 둔다 */
-[data-testid="stSidebarCollapsedControl"],
-[data-testid="stExpandSidebarButton"] {
-    display: flex !important;
-    visibility: visible !important;
-    top: 0.35rem !important;
-    z-index: 999999 !important;
-}
+
+/* 헤더는 높이 0의 '투명한 껍데기'로만 남기고, 터치를 절대 가로채지 못하게 한다.
+   (이 처리를 빼먹으면 화면 위쪽을 덮어 클릭·스크롤이 먹히지 않는다.) */
+header[data-testid="stHeader"],
+header[data-testid="stAppHeader"],
+[data-testid="stHeader"],
+[data-testid="stAppHeader"] { pointer-events: none !important; }
+header[data-testid="stHeader"] button,
+header[data-testid="stAppHeader"] button,
+[data-testid="stHeader"] button,
+[data-testid="stAppHeader"] button { pointer-events: auto !important; }
+/* 사이드바를 다시 펼치는 버튼은 Streamlit이 알아서 보여주므로 건드리지 않는다.
+   (강제로 display/z-index를 지정하면 투명한 덮개가 되어 터치를 막는다.) */
 
 /* ── 화면을 컴팩트하게: 여백을 줄여 한 화면에 더 많이 담기게 한다 ── */
 .block-container { padding-top: 0.8rem !important; padding-bottom: 1.5rem !important; }
@@ -1223,14 +1238,14 @@ def go_to(target_menu):
 
 
 with st.sidebar:
-    # 좁은 사이드바에서도 글자가 어중간하게 접히지 않도록,
-    # 제목을 '설명 줄 + 큰 제목 줄'로 나눠 각 줄이 한 줄에 딱 맞게 배치한다.
+    # 제목은 두 줄 모두 '같은 글꼴(Jua) + 같은 크기'로 맞추고 이모지는 넣지 않는다.
+    # 각 줄이 사이드바 폭 안에 한 줄로 딱 들어가도록 끊어 배치.
     md_html("""
     <div style="padding: 2px 0 4px 0;">
-        <div style="font-family:'Gowun Dodum', sans-serif; font-size:0.68rem; color:#9FC4E8;
-                    white-space:nowrap; letter-spacing:-0.5px; line-height:1.2;">손끝에서 배우는 인공지능 원리</div>
-        <div style="font-family:'Jua', sans-serif; font-size:1.15rem; color:#FFFFFF;
-                    white-space:nowrap; letter-spacing:-0.5px; line-height:1.3; margin-top:1px;">🧸 AI 탐험대</div>
+        <div style="font-family:'Jua', sans-serif; font-size:0.95rem; color:#FFFFFF;
+                    white-space:nowrap; letter-spacing:-0.5px; line-height:1.35;">손끝에서 배우는 인공지능 원리</div>
+        <div style="font-family:'Jua', sans-serif; font-size:0.95rem; color:#FFFFFF;
+                    white-space:nowrap; letter-spacing:-0.5px; line-height:1.35;">AI 탐험대</div>
     </div>
     """)
     st.divider()
@@ -3762,8 +3777,10 @@ elif menu == "🧠 6. 똑똑한 생각 주머니":
             </div>
           </div>
           <div style='text-align:center; margin-top:12px; font-size:14px; color:#3A4A6B;'>
-            요정(뉴런) 한 명 한 명은 <b>곱하고 더하는 간단한 계산</b>만 해요.<br>
-            그런데 여러 명의 계산을 <b>모으면</b> 놀랍게 똑똑한 판단이 나와요! 이게 바로 <b>인공신경망</b>이에요.
+            요정(뉴런) 한 명 한 명은 <b>곱하고 더하는 간단한 계산</b>을 한 뒤,<br>
+            <b>점수가 너무 낮으면 아예 신호를 보내지 않아요</b>(이 규칙을 <b>활성화 함수</b>라고 해요).<br>
+            바로 이 '보낼까 말까' 규칙 덕분에, 여러 명의 계산을 <b>모으면</b>
+            혼자서는 못 하던 똑똑한 판단이 나온답니다! 이게 바로 <b>인공신경망</b>이에요.
           </div>
         </div>
         """)
@@ -3901,9 +3918,15 @@ elif menu == "🧠 6. 똑똑한 생각 주머니":
                     w3_sleep = st.slider("😴  ", 0.0, 2.0, 3.0, step=0.1, key="nn_w3_sleep")
 
         # 은닉층 요정 3명의 계산 (각자 입력 3개를 자기 힘으로 조합)
-        h1 = g_pizza * w1_pizza + g_exercise * w1_ex + g_sleep * w1_sleep
-        h2 = g_pizza * w2_pizza + g_exercise * w2_ex + g_sleep * w2_sleep
-        h3 = g_pizza * w3_pizza + g_exercise * w3_ex + g_sleep * w3_sleep
+        z1 = g_pizza * w1_pizza + g_exercise * w1_ex + g_sleep * w1_sleep
+        z2 = g_pizza * w2_pizza + g_exercise * w2_ex + g_sleep * w2_sleep
+        z3 = g_pizza * w3_pizza + g_exercise * w3_ex + g_sleep * w3_sleep
+
+        # ★ 활성화 함수(ReLU): 계산값이 0보다 낮으면 신호를 보내지 않는다(0으로 만든다).
+        #   이 단계가 없으면 '곱하고 더하기'를 두 번 반복하는 것뿐이라, 요정을 몇 명을 쓰든
+        #   결국 요정 1명으로 만들 수 있는 결과와 똑같아진다(선형 결합을 합치면 다시 선형).
+        #   즉 "여러 뉴런을 모으면 더 똑똑해진다"는 이 활동의 설명이 성립하려면 반드시 필요하다.
+        h1, h2, h3 = max(0.0, z1), max(0.0, z2), max(0.0, z3)
 
         # 출력 요정이 은닉층 3명의 판단을 다시 한 번 종합
         raw = h1 * wo1 + h2 * wo2 + h3 * wo3 + bias_out
@@ -3915,8 +3938,14 @@ elif menu == "🧠 6. 똑똑한 생각 주머니":
             st.write(f"### {power:.0f} / 100")
 
             with st.expander("🔍 은닉층 요정 3명이 계산한 중간 점수 보기"):
-                st.write(f"🧚 1번 요정: {h1:.1f}점 · 🧚 2번 요정: {h2:.1f}점 · 🧚 3번 요정: {h3:.1f}점")
-                st.caption("출력 요정 = (1번×반영도) + (2번×반영도) + (3번×반영도) + 기본 힘")
+                for _i, (_z, _h) in enumerate([(z1, h1), (z2, h2), (z3, h3)], start=1):
+                    if _h == 0:
+                        st.write(f"🧚 {_i}번 요정: 계산값 {_z:.1f}점 → 😴 **신호 없음(0점)**")
+                    else:
+                        st.write(f"🧚 {_i}번 요정: **{_h:.1f}점** 전달!")
+                st.caption("요정은 계산값이 0보다 낮으면 신호를 보내지 않아요(0점). "
+                           "이렇게 '신호를 보낼지 말지' 정하는 규칙을 **활성화 함수**라고 해요. "
+                           "출력 요정 = (1번×반영도) + (2번×반영도) + (3번×반영도) + 기본 힘")
 
             fig = go.Figure()
             node_x = [0, 0, 0, 1.6, 1.6, 1.6, 3.2]
