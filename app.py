@@ -124,12 +124,124 @@ section[data-testid="stSidebar"] label { color: #EAF6FF !important; }
 section[data-testid="stSidebar"] .stRadio > div { gap: 4px; }
 section[data-testid="stSidebar"] .stRadio label { background: #24365C; border-radius: 12px; padding: 8px 10px; margin-bottom: 2px; }
 
-/* ── 사이드바 글자만 살짝 줄여 공간을 아낀다 (폭은 Streamlit 기본값 유지) ── */
-section[data-testid="stSidebar"] h1 { font-size: 1.35rem !important; }
-section[data-testid="stSidebar"] .stRadio label { padding: 6px 9px; font-size: 0.92rem; }
+/* ── 사이드바 폭을 기본(21rem≒336px)의 절반인 168px로 줄인다 ──
+   태블릿에서 본문(탐험 화면)이 더 넓게 보이도록 하기 위함.
+   Streamlit 버전마다 폭을 잡는 요소가 달라서 여러 선택자를 함께 지정한다. */
+:root, .stApp { --sidebar-width: 168px !important; }
+section[data-testid="stSidebar"],
+div[data-testid="stSidebar"] {
+    width: 168px !important;
+    min-width: 168px !important;
+    max-width: 168px !important;
+    flex: 0 0 168px !important;
+}
+section[data-testid="stSidebar"] > div,
+div[data-testid="stSidebarContent"],
+div[data-testid="stSidebarUserContent"] {
+    width: 168px !important;
+    min-width: 168px !important;
+}
+/* 아이들이 실수로 폭을 잡아끌지 않도록 크기 조절 손잡이는 숨긴다 */
+[data-testid="stSidebarResizeHandle"],
+[class*="ResizeHandle"] { display: none !important; }
+
+/* ── 좁아진 폭에 맞춰 사이드바 글자를 작게 ── */
+section[data-testid="stSidebar"] div[data-testid="stSidebarUserContent"] { padding: 0.6rem 0.55rem 2rem 0.55rem !important; }
+section[data-testid="stSidebar"] h1 { font-size: 0.95rem !important; line-height: 1.3 !important; margin-bottom: 0.2rem !important; word-break: keep-all; }
+section[data-testid="stSidebar"] h2 { font-size: 0.88rem !important; }
+section[data-testid="stSidebar"] h3 { font-size: 0.82rem !important; margin: 0.2rem 0 !important; }
+section[data-testid="stSidebar"] h4 { font-size: 0.78rem !important; margin: 0.2rem 0 !important; }
+section[data-testid="stSidebar"] p,
+section[data-testid="stSidebar"] li,
+section[data-testid="stSidebar"] span { font-size: 0.72rem !important; line-height: 1.35 !important; }
+section[data-testid="stSidebar"] [data-testid="stCaptionContainer"] p { font-size: 0.66rem !important; }
+section[data-testid="stSidebar"] .stRadio label { padding: 5px 7px; font-size: 0.72rem !important; line-height: 1.25 !important; word-break: keep-all; }
+section[data-testid="stSidebar"] .stRadio label p { font-size: 0.72rem !important; }
+section[data-testid="stSidebar"] .stButton>button { padding: 0.4em 0.6em !important; font-size: 0.72rem !important; }
+section[data-testid="stSidebar"] hr { margin: 0.5rem 0 !important; }
+section[data-testid="stSidebar"] [data-testid="stVerticalBlock"] { gap: 0.35rem !important; }
+
+/* ── 사이드바 접기 버튼에 'keyboard_double_arrow_left' 글자가 그대로 보이는 문제 해결 ──
+   (아이콘 폰트가 늦게/못 불러와질 때 리거처 글자가 노출된다. 글자는 감추고 화살표 기호로 대체) */
+[data-testid="stSidebarCollapseButton"] span[data-testid="stIconMaterial"],
+[data-testid="stSidebarCollapsedControl"] span[data-testid="stIconMaterial"],
+[data-testid="stExpandSidebarButton"] span[data-testid="stIconMaterial"],
+[data-testid="stSidebarHeader"] span[data-testid="stIconMaterial"],
+[data-testid="stSidebarCollapseButton"] span.material-symbols-rounded,
+[data-testid="stSidebarCollapsedControl"] span.material-symbols-rounded,
+[data-testid="stExpandSidebarButton"] span.material-symbols-rounded {
+    font-size: 0 !important;
+    color: transparent !important;
+    line-height: 0 !important;
+    overflow: hidden !important;
+}
+[data-testid="stSidebarCollapseButton"] span[data-testid="stIconMaterial"]::after,
+[data-testid="stSidebarHeader"] span[data-testid="stIconMaterial"]::after,
+[data-testid="stSidebarCollapseButton"] span.material-symbols-rounded::after {
+    content: "«";
+    font-family: 'Gowun Dodum', sans-serif !important;
+    font-size: 18px !important;
+    line-height: 1 !important;
+    color: #FFFFFF !important;
+}
+[data-testid="stSidebarCollapsedControl"] span[data-testid="stIconMaterial"]::after,
+[data-testid="stExpandSidebarButton"] span[data-testid="stIconMaterial"]::after,
+[data-testid="stSidebarCollapsedControl"] span.material-symbols-rounded::after,
+[data-testid="stExpandSidebarButton"] span.material-symbols-rounded::after {
+    content: "»";
+    font-family: 'Gowun Dodum', sans-serif !important;
+    font-size: 18px !important;
+    line-height: 1 !important;
+    color: #1B2A4A !important;
+}
+
+/* ── 상단 흰색 바(Fork / ⋮ / 배포 버튼 등) 숨기기 ──
+   높이를 0으로 만들어 화면 위쪽 공간까지 되찾는다.
+   단, 사이드바를 다시 펼치는 버튼은 남겨 둔다. */
+header[data-testid="stHeader"],
+header[data-testid="stAppHeader"],
+[data-testid="stHeader"],
+[data-testid="stAppHeader"] {
+    background: transparent !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+[data-testid="stToolbar"],
+[data-testid="stAppToolbar"],
+[data-testid="stToolbarActions"],
+[data-testid="stToolbarActionButton"],
+[data-testid="stHeaderActionElements"],
+[data-testid="stDecoration"],
+[data-testid="stStatusWidget"],
+[data-testid="stMainMenu"],
+[data-testid="stAppDeployButton"],
+.stAppDeployButton,
+#MainMenu,
+footer,
+[data-testid="stAppViewerBadge"],
+[class*="viewerBadge"],
+[class*="_profileContainer"],
+[class*="_viewerBadge"],
+[data-testid="manage-app-button"] { display: none !important; visibility: hidden !important; }
+/* 사이드바를 다시 펼치는 버튼만은 계속 보이게 둔다 */
+[data-testid="stSidebarCollapsedControl"],
+[data-testid="stExpandSidebarButton"] {
+    display: flex !important;
+    visibility: visible !important;
+    top: 0.35rem !important;
+    z-index: 999999 !important;
+}
 
 /* ── 화면을 컴팩트하게: 여백을 줄여 한 화면에 더 많이 담기게 한다 ── */
-.block-container { padding-top: 1.2rem !important; padding-bottom: 1.5rem !important; }
+.block-container { padding-top: 0.8rem !important; padding-bottom: 1.5rem !important; }
+
+/* ── 각 탭 제목 글자 크기 축소 (태블릿에서 스크롤을 줄이기 위함) ── */
+.block-container h1 { font-size: 1.5rem !important; }
+.block-container h2 { font-size: 1.22rem !important; }
+.block-container h3 { font-size: 1.05rem !important; }
+.block-container h4 { font-size: 0.95rem !important; }
 .block-container h1 { margin-top: 0.2rem !important; margin-bottom: 0.4rem !important; }
 .block-container h2 { margin-top: 0.5rem !important; margin-bottom: 0.35rem !important; }
 .block-container h3 { margin-top: 0.5rem !important; margin-bottom: 0.3rem !important; }
@@ -197,7 +309,9 @@ section[data-testid="stSidebar"] .stRadio label { padding: 6px 9px; font-size: 0
     }
     /* 버튼과 라디오 터치 영역을 조금 더 넓게 */
     .stButton>button { padding: 0.7em 1.3em; font-size: 16px; }
-    section[data-testid="stSidebar"] .stRadio label { padding: 12px 12px; }
+    /* 사이드바는 좁게 유지하되 터치 영역만 세로로 조금 넉넉하게 */
+    section[data-testid="stSidebar"] .stRadio label { padding: 9px 7px; }
+    section[data-testid="stSidebar"] .stButton>button { font-size: 0.72rem !important; padding: 0.5em 0.6em !important; }
 }
 </style>
 """)
@@ -207,16 +321,19 @@ def hero_card(emoji, title, subtitle, color="#2D9CDB", term=None):
     """섹션 상단에 표시되는 카드형 히어로 헤더"""
     term_html = ""
     if term:
-        term_html = (f'<div style="display:inline-block; margin-top:14px; background:rgba(255,255,255,0.28); '
-                     f'border:2px solid rgba(255,255,255,0.75); border-radius:999px; padding:8px 22px; '
-                     f'font-family:\'Jua\', sans-serif; font-size:20px; color:white;">'
+        term_html = (f'<div style="display:inline-block; margin-top:7px; background:rgba(255,255,255,0.28); '
+                     f'border:2px solid rgba(255,255,255,0.75); border-radius:999px; padding:3px 12px; '
+                     f'font-family:\'Jua\', sans-serif; font-size:13px; color:white;">'
                      f'🏷️ 오늘의 AI 원리: <b>{term}</b></div>')
+    # 이모지와 제목을 한 줄에 나란히 배치해 카드 높이를 크게 줄인다.
     card_html = (f'<div style="background: linear-gradient(135deg, {color}, {color}CC); '
-                 f'border-radius: 26px; padding: 30px 34px; margin-bottom: 20px; '
-                 f'box-shadow: 0 10px 28px rgba(27,42,74,0.18);">'
-                 f'<div style="font-size: 46px; line-height: 1;">{emoji}</div>'
-                 f'<div style="font-family: \'Jua\', sans-serif; font-size: 30px; color: white; margin-top: 8px;">{title}</div>'
-                 f'<div style="font-family: \'Gowun Dodum\', sans-serif; font-size: 16px; color: white; opacity: 0.92; margin-top: 8px; line-height: 1.6;">{subtitle}</div>'
+                 f'border-radius: 16px; padding: 12px 16px; margin-bottom: 10px; '
+                 f'box-shadow: 0 4px 12px rgba(27,42,74,0.14);">'
+                 f'<div style="display:flex; align-items:center; gap:9px;">'
+                 f'<span style="font-size: 24px; line-height: 1;">{emoji}</span>'
+                 f'<span style="font-family: \'Jua\', sans-serif; font-size: 19px; color: white; line-height: 1.25;">{title}</span>'
+                 f'</div>'
+                 f'<div style="font-family: \'Gowun Dodum\', sans-serif; font-size: 12.5px; color: white; opacity: 0.92; margin-top: 4px; line-height: 1.45;">{subtitle}</div>'
                  f'{term_html}'
                  f'</div>')
     st.markdown(card_html, unsafe_allow_html=True)
@@ -1013,8 +1130,7 @@ def go_to(target_menu):
 
 
 with st.sidebar:
-    st.title("🧸 꼬마 AI 탐험대")
-    st.write("안녕! 인공지능 세계로 떠나볼까?")
+    st.title("🧸 손끝에서 배우는 인공지능 원리 AI 탐험대")
     st.divider()
     menu = st.radio(
         "어느 섬으로 탐험을 떠날까요?",
