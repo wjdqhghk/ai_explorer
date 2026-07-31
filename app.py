@@ -124,39 +124,65 @@ section[data-testid="stSidebar"] label { color: #EAF6FF !important; }
 section[data-testid="stSidebar"] .stRadio > div { gap: 4px; }
 section[data-testid="stSidebar"] .stRadio label { background: #24365C; border-radius: 12px; padding: 8px 10px; margin-bottom: 2px; }
 
-/* ── 사이드바 폭을 기본(21rem≒336px)의 절반인 168px로 줄인다 ──
-   태블릿에서 본문(탐험 화면)이 더 넓게 보이도록 하기 위함.
+/* ── 사이드바 폭: 메뉴 글자가 절대 두 줄로 접히지 않는 최소 폭(206px)으로 고정 ──
+   기본값 336px보다는 훨씬 좁아 본문(탐험 화면)이 넓어지고,
+   가장 긴 메뉴("🔧 로봇 네오 종합 점검 (복습)")도 한 줄에 들어간다.
    Streamlit 버전마다 폭을 잡는 요소가 달라서 여러 선택자를 함께 지정한다. */
-:root, .stApp { --sidebar-width: 168px !important; }
+:root, .stApp { --sidebar-width: 206px !important; }
 section[data-testid="stSidebar"],
 div[data-testid="stSidebar"] {
-    width: 168px !important;
-    min-width: 168px !important;
-    max-width: 168px !important;
-    flex: 0 0 168px !important;
+    width: 206px !important;
+    min-width: 206px !important;
+    max-width: 206px !important;
+    flex: 0 0 206px !important;
 }
 section[data-testid="stSidebar"] > div,
 div[data-testid="stSidebarContent"],
 div[data-testid="stSidebarUserContent"] {
-    width: 168px !important;
-    min-width: 168px !important;
+    width: 206px !important;
+    min-width: 206px !important;
 }
 /* 아이들이 실수로 폭을 잡아끌지 않도록 크기 조절 손잡이는 숨긴다 */
 [data-testid="stSidebarResizeHandle"],
 [class*="ResizeHandle"] { display: none !important; }
 
-/* ── 좁아진 폭에 맞춰 사이드바 글자를 작게 ── */
-section[data-testid="stSidebar"] div[data-testid="stSidebarUserContent"] { padding: 0.6rem 0.55rem 2rem 0.55rem !important; }
-section[data-testid="stSidebar"] h1 { font-size: 0.95rem !important; line-height: 1.3 !important; margin-bottom: 0.2rem !important; word-break: keep-all; }
-section[data-testid="stSidebar"] h2 { font-size: 0.88rem !important; }
-section[data-testid="stSidebar"] h3 { font-size: 0.82rem !important; margin: 0.2rem 0 !important; }
-section[data-testid="stSidebar"] h4 { font-size: 0.78rem !important; margin: 0.2rem 0 !important; }
+/* ── 좁아진 폭에 맞춰 사이드바 글자 크기 조정 ── */
+section[data-testid="stSidebar"] div[data-testid="stSidebarUserContent"] { padding: 0.5rem 0.5rem 2rem 0.5rem !important; }
+section[data-testid="stSidebar"] h1 { font-size: 1.0rem !important; line-height: 1.25 !important; margin-bottom: 0.15rem !important; }
+section[data-testid="stSidebar"] h2 { font-size: 0.9rem !important; }
+section[data-testid="stSidebar"] h3 { font-size: 0.84rem !important; margin: 0.2rem 0 !important; }
+section[data-testid="stSidebar"] h4 { font-size: 0.8rem !important; margin: 0.2rem 0 !important; }
 section[data-testid="stSidebar"] p,
 section[data-testid="stSidebar"] li,
-section[data-testid="stSidebar"] span { font-size: 0.72rem !important; line-height: 1.35 !important; }
-section[data-testid="stSidebar"] [data-testid="stCaptionContainer"] p { font-size: 0.66rem !important; }
-section[data-testid="stSidebar"] .stRadio label { padding: 5px 7px; font-size: 0.72rem !important; line-height: 1.25 !important; word-break: keep-all; }
-section[data-testid="stSidebar"] .stRadio label p { font-size: 0.72rem !important; }
+section[data-testid="stSidebar"] span { font-size: 0.74rem !important; line-height: 1.35 !important; }
+section[data-testid="stSidebar"] [data-testid="stCaptionContainer"] p { font-size: 0.68rem !important; }
+
+/* ── 메뉴(라디오)는 무슨 일이 있어도 한 줄로 ──
+   nowrap으로 줄바꿈 자체를 막고, 혹시 넘칠 경우에만 …으로 처리해 모양이 깨지지 않게 한다. */
+section[data-testid="stSidebar"] .stRadio > div { gap: 3px !important; }
+section[data-testid="stSidebar"] .stRadio label {
+    padding: 6px 6px !important;
+    border-radius: 10px !important;
+    font-size: 0.72rem !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    letter-spacing: -0.4px;
+}
+section[data-testid="stSidebar"] .stRadio label > div:last-child { min-width: 0 !important; overflow: hidden !important; }
+section[data-testid="stSidebar"] .stRadio label div[data-testid="stMarkdownContainer"] { overflow: hidden !important; }
+section[data-testid="stSidebar"] .stRadio label p {
+    font-size: 0.72rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    letter-spacing: -0.4px;
+}
+/* 라디오 동그라미를 살짝 줄여 글자 공간을 벌어준다 */
+section[data-testid="stSidebar"] .stRadio label > div:first-child { flex: 0 0 auto !important; transform: scale(0.82); transform-origin: center; margin-right: -2px; }
+
 section[data-testid="stSidebar"] .stButton>button { padding: 0.4em 0.6em !important; font-size: 0.72rem !important; }
 section[data-testid="stSidebar"] hr { margin: 0.5rem 0 !important; }
 section[data-testid="stSidebar"] [data-testid="stVerticalBlock"] { gap: 0.35rem !important; }
@@ -309,8 +335,8 @@ footer,
     }
     /* 버튼과 라디오 터치 영역을 조금 더 넓게 */
     .stButton>button { padding: 0.7em 1.3em; font-size: 16px; }
-    /* 사이드바는 좁게 유지하되 터치 영역만 세로로 조금 넉넉하게 */
-    section[data-testid="stSidebar"] .stRadio label { padding: 9px 7px; }
+    /* 사이드바는 좁게 유지하되, 터치 영역만 '세로로' 넉넉하게 (가로 여백은 그대로 → 한 줄 유지) */
+    section[data-testid="stSidebar"] .stRadio label { padding: 9px 6px !important; }
     section[data-testid="stSidebar"] .stButton>button { font-size: 0.72rem !important; padding: 0.5em 0.6em !important; }
 }
 </style>
@@ -1130,7 +1156,16 @@ def go_to(target_menu):
 
 
 with st.sidebar:
-    st.title("🧸 손끝에서 배우는 인공지능 원리 AI 탐험대")
+    # 좁은 사이드바에서도 글자가 어중간하게 접히지 않도록,
+    # 제목을 '설명 줄 + 큰 제목 줄'로 나눠 각 줄이 한 줄에 딱 맞게 배치한다.
+    md_html("""
+    <div style="padding: 2px 0 4px 0;">
+        <div style="font-family:'Gowun Dodum', sans-serif; font-size:0.68rem; color:#9FC4E8;
+                    white-space:nowrap; letter-spacing:-0.5px; line-height:1.2;">손끝에서 배우는 인공지능 원리</div>
+        <div style="font-family:'Jua', sans-serif; font-size:1.15rem; color:#FFFFFF;
+                    white-space:nowrap; letter-spacing:-0.5px; line-height:1.3; margin-top:1px;">🧸 AI 탐험대</div>
+    </div>
+    """)
     st.divider()
     menu = st.radio(
         "어느 섬으로 탐험을 떠날까요?",
