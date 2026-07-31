@@ -124,9 +124,7 @@ section[data-testid="stSidebar"] label { color: #EAF6FF !important; }
 section[data-testid="stSidebar"] .stRadio > div { gap: 4px; }
 section[data-testid="stSidebar"] .stRadio label { background: #24365C; border-radius: 12px; padding: 8px 10px; margin-bottom: 2px; }
 
-/* ── 사이드바 폭을 줄여 본문(활동 화면)을 더 넓게 쓴다 (태블릿 대응) ── */
-section[data-testid="stSidebar"][aria-expanded="true"] { width: 17rem !important; min-width: 17rem !important; }
-section[data-testid="stSidebar"] > div { width: 17rem !important; }
+/* ── 사이드바 글자만 살짝 줄여 공간을 아낀다 (폭은 Streamlit 기본값 유지) ── */
 section[data-testid="stSidebar"] h1 { font-size: 1.35rem !important; }
 section[data-testid="stSidebar"] .stRadio label { padding: 6px 9px; font-size: 0.92rem; }
 
@@ -140,16 +138,6 @@ section[data-testid="stSidebar"] .stRadio label { padding: 6px 9px; font-size: 0
 [data-testid="stVerticalBlock"] { gap: 0.55rem !important; }
 .stAlert { padding-top: 0.6rem !important; padding-bottom: 0.6rem !important; }
 [data-testid="stExpander"] { margin-bottom: 0.4rem !important; }
-
-/* 우리가 만든 '메뉴 접기/열기' 버튼 (본문 상단 고정) */
-#ai-sidebar-toggle {
-    position: fixed; top: 8px; left: 10px; z-index: 999990;
-    background: #FFC93C; color: #1B2A4A; border: none;
-    border-radius: 999px; padding: 8px 16px; cursor: pointer;
-    font-family: 'Jua', sans-serif; font-size: 15px; font-weight: 700;
-    box-shadow: 0 3px 0 #d9a700;
-}
-#ai-sidebar-toggle:active { transform: translateY(2px); box-shadow: 0 1px 0 #d9a700; }
 
 /* 버튼 */
 .stButton>button {
@@ -210,23 +198,6 @@ section[data-testid="stSidebar"] .stRadio label { padding: 6px 9px; font-size: 0
     /* 버튼과 라디오 터치 영역을 조금 더 넓게 */
     .stButton>button { padding: 0.7em 1.3em; font-size: 16px; }
     section[data-testid="stSidebar"] .stRadio label { padding: 12px 12px; }
-}
-
-/* 사이드바 접기 버튼의 아이콘 폰트가 늦게 로드될 때
-   'keyboard_double_arrow_left' 같은 글자가 잠깐 보이는 것을 방지.
-   아이콘 요소의 글자는 숨기고, 화살표(‹)로 대체 표시한다. */
-[data-testid="stSidebarCollapseButton"] span,
-[data-testid="stSidebarCollapsedControl"] span,
-[data-testid="baseButton-headerNoPadding"] span {
-    font-size: 0 !important;
-}
-[data-testid="stSidebarCollapseButton"] span::after,
-[data-testid="stSidebarCollapsedControl"] span::after,
-[data-testid="baseButton-headerNoPadding"] span::after {
-    content: "‹";
-    font-size: 22px;
-    font-family: 'Jua', sans-serif;
-    color: #FFFFFF;
 }
 </style>
 """)
@@ -1172,71 +1143,6 @@ def next_section_button(current_menu, key_suffix):
             go_to(target)
 
 
-# ── 화면 안에 '메뉴 접기/열기' 버튼을 띄운다 ────────────────────────
-# 태블릿에서 사이드바가 화면을 많이 차지해, 필요할 때 접어서
-# 활동 화면(그래프·조작기)을 넓게 볼 수 있도록 한다.
-components.html(
-    """
-    <script>
-    (function () {
-        const doc = window.parent.document;
-
-        function findSidebar() {
-            return doc.querySelector('section[data-testid="stSidebar"]')
-                || doc.querySelector('[data-testid="stSidebar"]');
-        }
-
-        function isOpen(sb) {
-            if (!sb) return false;
-            if (sb.getAttribute('aria-expanded') === 'false') return false;
-            return sb.offsetWidth > 40;
-        }
-
-        function setOpen(open) {
-            const sb = findSidebar();
-            if (!sb) return;
-            if (open) {
-                sb.style.removeProperty('display');
-                sb.style.removeProperty('width');
-                sb.style.removeProperty('min-width');
-                sb.style.removeProperty('margin-left');
-                sb.style.transform = 'none';
-                sb.setAttribute('aria-expanded', 'true');
-            } else {
-                sb.style.width = '0px';
-                sb.style.minWidth = '0px';
-                sb.style.marginLeft = '0px';
-                sb.style.transform = 'translateX(-100%)';
-                sb.setAttribute('aria-expanded', 'false');
-            }
-            const btn = doc.getElementById('ai-sidebar-toggle');
-            if (btn) btn.innerHTML = open ? '◀ 메뉴 접기' : '☰ 메뉴 열기';
-        }
-
-        function makeButton() {
-            if (doc.getElementById('ai-sidebar-toggle')) return;
-            const btn = doc.createElement('button');
-            btn.id = 'ai-sidebar-toggle';
-            btn.innerHTML = '◀ 메뉴 접기';
-            btn.onclick = function () {
-                const sb = findSidebar();
-                setOpen(!isOpen(sb));
-            };
-            doc.body.appendChild(btn);
-            // 현재 상태에 맞게 글자 맞추기
-            const sb = findSidebar();
-            btn.innerHTML = isOpen(sb) ? '◀ 메뉴 접기' : '☰ 메뉴 열기';
-        }
-
-        makeButton();
-        // Streamlit이 화면을 다시 그려도 버튼이 유지되도록 한 번 더 확인
-        setTimeout(makeButton, 400);
-        setTimeout(makeButton, 1200);
-    })();
-    </script>
-    """,
-    height=0,
-)
 
 # 다른 화면으로 막 이동한 직후라면, 화면을 맨 위로 스크롤한다
 # (탭/메뉴 이동 시 이전 스크롤 위치가 남아 중간부터 보이는 문제 해결)
@@ -1831,12 +1737,17 @@ elif menu == "📈 1. 마법의 선 긋기":
 
         st.write("")
         st.markdown("### 👀 조작하기 전에, 먼저 눈으로 봐요")
-        st.write("친구들이 '공부한 시간'과 '받은 시험 점수'를 파란 점으로 찍어놨어요. 아래 버튼을 눌러서 **나쁜 선**과 **좋은 선**이 어떻게 다른지 먼저 비교해봐요.")
 
         ex_x = np.array([1, 2, 3, 4, 5])
         ex_y = np.array([20, 35, 55, 75, 95])
 
-        ex_choice = st.radio("어떤 선을 볼까요?", ["😵 엉뚱한 선", "😎 완벽한 선"], horizontal=True, key="lr_example_choice")
+        # 왼쪽: 설명·선택 / 오른쪽: 그래프 → 그래프 비율이 알맞게 보인다
+        col_lr_txt, col_lr_fig = st.columns([1, 1.4])
+
+        with col_lr_txt:
+            st.write("친구들이 '공부한 시간'과 '받은 시험 점수'를 파란 점으로 찍어놨어요. "
+                     "아래 버튼을 눌러서 **나쁜 선**과 **좋은 선**이 어떻게 다른지 먼저 비교해봐요.")
+            ex_choice = st.radio("어떤 선을 볼까요?", ["😵 엉뚱한 선", "😎 완벽한 선"], key="lr_example_choice")
 
         if ex_choice == "😵 엉뚱한 선":
             ex_w, ex_b = 3.0, 45.0
@@ -1846,21 +1757,24 @@ elif menu == "📈 1. 마법의 선 긋기":
         ex_pred = ex_w * ex_x + ex_b
         ex_err = np.mean((ex_y - ex_pred) ** 2)
 
-        fig_ex = go.Figure()
-        fig_ex.add_trace(go.Scatter(x=ex_x, y=ex_y, mode='markers', name='실제 점수', marker=dict(size=15, color='blue')))
-        fig_ex.add_trace(go.Scatter(x=ex_x, y=ex_pred, mode='lines', name='선', line=dict(color='red', width=5)))
-        for i in range(len(ex_x)):
-            fig_ex.add_trace(go.Scatter(x=[ex_x[i], ex_x[i]], y=[ex_y[i], ex_pred[i]], mode='lines', line=dict(color='gray', dash='dash'), showlegend=False))
-        fig_ex.update_layout(xaxis_title="공부시간(시간)", yaxis_title="시험점수(점)", height=320,
-                              margin=dict(l=20, r=20, t=30, b=20), dragmode=False, hovermode=False)
-        fig_ex.update_xaxes(fixedrange=True)
-        fig_ex.update_yaxes(fixedrange=True)
-        st.plotly_chart(fig_ex, **_STRETCH, config={'displayModeBar': False})
+        with col_lr_txt:
+            if ex_choice == "😵 엉뚱한 선":
+                st.error(f"틀린 정도: {ex_err:.0f}점 → 점들과 선 사이 회색 틈(오차)이 크게 벌어져 있죠? 이러면 예측이 자꾸 틀려요.")
+            else:
+                st.success(f"틀린 정도: {ex_err:.0f}점 → 회색 틈이 거의 없어요! 이렇게 만드는 게 오늘의 목표예요.")
 
-        if ex_choice == "😵 엉뚱한 선":
-            st.error(f"틀린 정도: {ex_err:.0f}점 → 점들과 선 사이 회색 틈(오차)이 크게 벌어져 있죠? 이러면 예측이 자꾸 틀려요.")
-        else:
-            st.success(f"틀린 정도: {ex_err:.0f}점 → 회색 틈이 거의 없어요! 이렇게 만드는 게 오늘의 목표예요.")
+        with col_lr_fig:
+            fig_ex = go.Figure()
+            fig_ex.add_trace(go.Scatter(x=ex_x, y=ex_y, mode='markers', name='실제 점수', marker=dict(size=15, color='blue')))
+            fig_ex.add_trace(go.Scatter(x=ex_x, y=ex_pred, mode='lines', name='선', line=dict(color='red', width=5)))
+            for i in range(len(ex_x)):
+                fig_ex.add_trace(go.Scatter(x=[ex_x[i], ex_x[i]], y=[ex_y[i], ex_pred[i]], mode='lines', line=dict(color='gray', dash='dash'), showlegend=False))
+            fig_ex.update_layout(xaxis_title="공부시간(시간)", yaxis_title="시험점수(점)", height=330,
+                                  margin=dict(l=20, r=20, t=30, b=20), dragmode=False, hovermode=False,
+                                  legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
+            fig_ex.update_xaxes(fixedrange=True)
+            fig_ex.update_yaxes(fixedrange=True)
+            st.plotly_chart(fig_ex, **_STRETCH, config={'displayModeBar': False})
 
         st.write("")
         st.info("💡 **이제 2단계 '마법사 훈련소'에서 이 선을 직접 만들어볼까요?**")
@@ -1916,7 +1830,7 @@ elif menu == "📈 1. 마법의 선 긋기":
             for i in range(len(x_data)):
                 fig.add_trace(go.Scatter(x=[x_data[i], x_data[i]], y=[y_data[i], y_pred[i]], mode='lines', line=dict(color='gray', dash='dash'), showlegend=False))
 
-            fig.update_layout(xaxis_title="공부시간(시간)", yaxis_title="시험점수(점)", dragmode=False, hovermode=False, margin=dict(l=20, r=20, t=30, b=20))
+            fig.update_layout(xaxis_title="공부시간(시간)", yaxis_title="시험점수(점)", dragmode=False, hovermode=False, height=260, margin=dict(l=20, r=20, t=30, b=20))
             fig.update_xaxes(fixedrange=True)
             fig.update_yaxes(fixedrange=True)
             st.plotly_chart(fig, **_STRETCH, config={'displayModeBar': False})
@@ -1938,7 +1852,7 @@ elif menu == "📈 1. 마법의 선 긋기":
             fig_loss.add_trace(go.Scatter(x=w_range, y=loss_range, mode='lines', name='틀린 점수 골짜기', line=dict(color='purple', width=4)))
             fig_loss.add_trace(go.Scatter(x=[w], y=[mse], mode='markers', name='현재 내 위치', marker=dict(size=25, color='orange', line=dict(width=2, color='white'))))
 
-            fig_loss.update_layout(xaxis_title="선의 기울기", yaxis_title="틀린 점수(오차)", dragmode=False, hovermode=False, margin=dict(l=20, r=20, t=30, b=20))
+            fig_loss.update_layout(xaxis_title="선의 기울기", yaxis_title="틀린 점수(오차)", dragmode=False, hovermode=False, height=260, margin=dict(l=20, r=20, t=30, b=20))
             fig_loss.update_xaxes(fixedrange=True)
             fig_loss.update_yaxes(fixedrange=True)
             st.plotly_chart(fig_loss, **_STRETCH, config={'displayModeBar': False})
@@ -2024,7 +1938,7 @@ elif menu == "📈 1. 마법의 선 긋기":
                     for i in range(len(free_x)):
                         fig_free.add_trace(go.Scatter(x=[free_x[i], free_x[i]], y=[free_y[i], free_y_pred[i]], mode='lines', line=dict(color='lightgray', dash='dash'), showlegend=False))
 
-                    fig_free.update_layout(xaxis_title=custom_x, yaxis_title=custom_y, dragmode=False, hovermode="closest", margin=dict(l=20, r=20, t=30, b=20))
+                    fig_free.update_layout(xaxis_title=custom_x, yaxis_title=custom_y, dragmode=False, hovermode="closest", height=300, margin=dict(l=20, r=20, t=30, b=20))
                     fig_free.update_xaxes(fixedrange=True)
                     fig_free.update_yaxes(fixedrange=True)
                     st.plotly_chart(fig_free, **_STRETCH, config={'displayModeBar': False})
@@ -2047,7 +1961,7 @@ elif menu == "📈 1. 마법의 선 긋기":
                     fig_loss_free.add_trace(go.Scatter(x=w_range_free, y=loss_range_free, mode='lines', name='틀린 점수 골짜기', line=dict(color='purple', width=4)))
                     fig_loss_free.add_trace(go.Scatter(x=[w_ai], y=[mse_ai], mode='markers', name='AI가 찾은 최하점', marker=dict(size=30, color='gold', symbol='star', line=dict(width=2, color='black'))))
 
-                    fig_loss_free.update_layout(xaxis_title="선의 기울기", yaxis_title="틀린 점수(오차)", dragmode=False, hovermode=False, margin=dict(l=20, r=20, t=30, b=20))
+                    fig_loss_free.update_layout(xaxis_title="선의 기울기", yaxis_title="틀린 점수(오차)", dragmode=False, hovermode=False, height=300, margin=dict(l=20, r=20, t=30, b=20))
                     fig_loss_free.update_xaxes(fixedrange=True)
                     fig_loss_free.update_yaxes(fixedrange=True)
                     st.plotly_chart(fig_loss_free, **_STRETCH, config={'displayModeBar': False})
@@ -2106,7 +2020,8 @@ elif menu == "📈 1. 마법의 선 긋기":
             fig.add_trace(go.Scatter(x=x_line, y=slope * x_line + intercept, mode="lines",
                                       name="내가 그린 마법의 선", line=dict(color="red", width=4)))
             fig.update_layout(xaxis_title="붕어빵 크기 (cm)", yaxis_title="가격 (원)",
-                               height=420, xaxis_range=[0, 22], yaxis_range=[0, 1200])
+                               height=260, margin=dict(l=20, r=20, t=20, b=20),
+                               xaxis_range=[0, 22], yaxis_range=[0, 1200])
             st.plotly_chart(fig, **_STRETCH)
 
         if error < 2500:
@@ -2172,9 +2087,21 @@ elif menu == "⛰️ 2. 보물찾기 산":
 
         st.write("")
         st.markdown("### 👀 조작하기 전에, 먼저 눈으로 봐요")
-        st.write("아래 버튼으로 '보폭이 너무 큰 경우'와 '보폭이 딱 좋은 경우'를 비교해봐요.")
 
-        ex_step = st.radio("어떤 경우를 볼까요?", ["😱 보폭이 너무 큼", "😊 보폭이 딱 좋음"], horizontal=True, key="gd_example_choice")
+        # 왼쪽: 설명·선택 / 오른쪽: 그래프 → 그래프가 납작해지지 않고 비율이 알맞게 보인다
+        col_gd_txt, col_gd_fig = st.columns([1, 1.4])
+
+        with col_gd_txt:
+            st.write("아래 버튼으로 '보폭이 너무 큰 경우'와 '보폭이 딱 좋은 경우'를 비교해봐요.")
+            ex_step = st.radio("어떤 경우를 볼까요?", ["😱 보폭이 너무 큼", "😊 보폭이 딱 좋음"], key="gd_example_choice")
+
+            if ex_step == "😱 보폭이 너무 큼":
+                st.error("보세요! 보폭이 너무 크니까 보물상자를 휙 지나쳐서 반대편으로, "
+                         "또 반대편으로 튕겨나가요. 이러면 영영 도착 못 해요!")
+            else:
+                st.success("보폭이 알맞으니 한 걸음씩 착실하게 보물상자 쪽으로 다가가네요! "
+                           "이렇게 되는 게 목표예요.")
+
         ex_lr = 0.95 if ex_step == "😱 보폭이 너무 큼" else 0.12
 
         ex_path_x = [-9.0]
@@ -2188,19 +2115,16 @@ elif menu == "⛰️ 2. 보물찾기 산":
             ex_path_x.append(ex_x)
         ex_path_y = [v ** 2 for v in ex_path_x]
 
-        ex_xs = np.linspace(-15, 15, 100)
-        fig_ex = go.Figure()
-        fig_ex.add_trace(go.Scatter(x=ex_xs, y=ex_xs**2, mode='lines', line=dict(color='lightgray', width=5), name='골짜기'))
-        fig_ex.add_trace(go.Scatter(x=ex_path_x, y=ex_path_y, mode='lines+markers',
-                                     marker=dict(size=10, color='orange'), line=dict(color='red', width=2, dash='dot'), name='발자국'))
-        fig_ex.add_trace(go.Scatter(x=[0], y=[0], mode='markers', marker=dict(size=16, color='gold', symbol='diamond'), name='보물상자'))
-        fig_ex.update_layout(height=300, margin=dict(l=20, r=20, t=20, b=20), yaxis_range=[-5, 230])
-        st.plotly_chart(fig_ex, **_STRETCH, config={'displayModeBar': False})
-
-        if ex_step == "😱 보폭이 너무 큼":
-            st.error("보세요! 보폭이 너무 크니까 보물상자를 휙 지나쳐서 반대편으로, 또 반대편으로 튕겨나가요. 이러면 영영 도착 못 해요!")
-        else:
-            st.success("보폭이 알맞으니 한 걸음씩 착실하게 보물상자 쪽으로 다가가네요! 이렇게 되는 게 목표예요.")
+        with col_gd_fig:
+            ex_xs = np.linspace(-15, 15, 100)
+            fig_ex = go.Figure()
+            fig_ex.add_trace(go.Scatter(x=ex_xs, y=ex_xs**2, mode='lines', line=dict(color='lightgray', width=5), name='골짜기'))
+            fig_ex.add_trace(go.Scatter(x=ex_path_x, y=ex_path_y, mode='lines+markers',
+                                         marker=dict(size=10, color='orange'), line=dict(color='red', width=2, dash='dot'), name='발자국'))
+            fig_ex.add_trace(go.Scatter(x=[0], y=[0], mode='markers', marker=dict(size=16, color='gold', symbol='diamond'), name='보물상자'))
+            fig_ex.update_layout(height=330, margin=dict(l=20, r=20, t=20, b=20), yaxis_range=[-5, 230],
+                                 legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
+            st.plotly_chart(fig_ex, **_STRETCH, config={'displayModeBar': False})
 
         st.write("")
         st.info("🔗 **1번 활동과 연결돼요!** 아까 '마법의 선 긋기'에서 봤던 **'틀린 점수 미끄럼틀'** 그래프, 기억나나요? 그 U자 모양 골짜기가 바로 지금 이 산이에요. AI는 사람이 손으로 선을 움직이는 대신, 이렇게 **한 걸음씩 스스로 내려가면서** 가장 좋은 선을 찾아낸답니다!")
@@ -2294,7 +2218,7 @@ elif menu == "⛰️ 2. 보물찾기 산":
             fig.add_trace(go.Scatter(x=[path_x[0]], y=[path_y[0]], mode='markers', marker=dict(size=25, color='blue', symbol='star'), name='출발점'))
             fig.add_trace(go.Scatter(x=[path_x[-1]], y=[path_y[-1]], mode='markers+text', text=["현재 내 위치"], textposition="bottom center", marker=dict(size=25, color='green', symbol='x'), name='현재 위치'))
 
-            fig.update_layout(xaxis_title="탐험가의 위치", yaxis_title="산의 높이 (틀린 점수)", hovermode="closest")
+            fig.update_layout(xaxis_title="탐험가의 위치", yaxis_title="산의 높이 (틀린 점수)", hovermode="closest", height=300)
             st.plotly_chart(fig, **_STRETCH)
 
             if abs(path_x[-1]) < 0.5:
@@ -2371,7 +2295,7 @@ elif menu == "⛰️ 2. 보물찾기 산":
                                       marker=dict(size=20, color="red", symbol="star")))
             fig2.add_trace(go.Scatter(x=[0], y=[0], mode="markers", name="보물상자 🎁",
                                       marker=dict(size=16, color="gold", symbol="diamond")))
-            fig2.update_layout(height=450, yaxis_range=[-5, 230], xaxis_range=[-15, 15])
+            fig2.update_layout(height=315, yaxis_range=[-5, 230], xaxis_range=[-15, 15])
             st.plotly_chart(fig2, **_STRETCH)
 
         if st.session_state["gd_failed"]:
@@ -2912,17 +2836,26 @@ elif menu == "🤝 4. 가장 친한 친구":
 
         st.write("")
         st.markdown("### 👀 조작하기 전에, 먼저 눈으로 봐요")
-        cmp_choice = st.radio("새 과일을 어디에 놓아볼까요?", ["🍎 사과 무리 한가운데", "🍇 포도 무리 한가운데"], horizontal=True, key="knn_cmp_choice")
+
+        col_knn_txt, col_knn_fig = st.columns([1, 1.4])
+
+        with col_knn_txt:
+            cmp_choice = st.radio("새 과일을 어디에 놓아볼까요?", ["🍎 사과 무리 한가운데", "🍇 포도 무리 한가운데"], key="knn_cmp_choice")
+            st.info(f"새 과일 주변에 **{cmp_choice.split()[1]}**들이 잔뜩 있으니, 이 과일도 그럴 확률이 높겠죠? "
+                    f"이게 바로 KNN의 기본 생각이에요.")
+
         cmp_sweet, cmp_size = (8, 8) if cmp_choice == "🍎 사과 무리 한가운데" else (2, 2)
 
-        fig_cmp = go.Figure()
-        for kind, color in zip(['사과', '포도'], ['red', 'green']):
-            subset = data[data['과일 종류'] == kind]
-            fig_cmp.add_trace(go.Scatter(x=subset['달콤한 정도'], y=subset['과일 크기'], mode='markers', name=kind, marker=dict(size=18, color=color)))
-        fig_cmp.add_trace(go.Scatter(x=[cmp_sweet], y=[cmp_size], mode='markers', name='새 과일', marker=dict(size=28, color='blue', symbol='star')))
-        fig_cmp.update_layout(xaxis_title="달콤한 정도", yaxis_title="과일 크기", height=300, margin=dict(l=20, r=20, t=20, b=20))
-        st.plotly_chart(fig_cmp, **_STRETCH, config={'displayModeBar': False})
-        st.info(f"새 과일 주변에 **{cmp_choice.split()[1]}**들이 잔뜩 있으니, 이 과일도 그럴 확률이 높겠죠? 이게 바로 KNN의 기본 생각이에요.")
+        with col_knn_fig:
+            fig_cmp = go.Figure()
+            for kind, color in zip(['사과', '포도'], ['red', 'green']):
+                subset = data[data['과일 종류'] == kind]
+                fig_cmp.add_trace(go.Scatter(x=subset['달콤한 정도'], y=subset['과일 크기'], mode='markers', name=kind, marker=dict(size=18, color=color)))
+            fig_cmp.add_trace(go.Scatter(x=[cmp_sweet], y=[cmp_size], mode='markers', name='새 과일', marker=dict(size=28, color='blue', symbol='star')))
+            fig_cmp.update_layout(xaxis_title="달콤한 정도", yaxis_title="과일 크기", height=330,
+                                  margin=dict(l=20, r=20, t=20, b=20),
+                                  legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
+            st.plotly_chart(fig_cmp, **_STRETCH, config={'displayModeBar': False})
 
         st.write("")
         st.info("💡 **다음 단계!** 2단계 탭에서 직접 새 과일을 놓아보고 K값도 바꿔봐요.")
@@ -2960,7 +2893,7 @@ elif menu == "🤝 4. 가장 친한 친구":
             fig.add_trace(go.Scatter(x=[new_sweet], y=[new_size], mode='markers', name='새 과일 (별모양)', marker=dict(size=30, color='blue', symbol='star')))
 
             fig.add_shape(type="circle", xref="x", yref="y", x0=new_sweet-dist[0][-1], y0=new_size-dist[0][-1], x1=new_sweet+dist[0][-1], y1=new_size+dist[0][-1], line_color="orange", opacity=0.2, fillcolor="orange")
-            fig.update_layout(xaxis_title="달콤한 정도", yaxis_title="과일 크기", margin=dict(b=60, l=60))
+            fig.update_layout(xaxis_title="달콤한 정도", yaxis_title="과일 크기", height=300, margin=dict(b=60, l=60))
             add_sweetness_axis_hints(fig)
             st.plotly_chart(fig, **_STRETCH)
 
@@ -3007,7 +2940,7 @@ elif menu == "🤝 4. 가장 친한 친구":
             fig2.add_trace(go.Scatter(x=[egg_x], y=[egg_y], mode="markers+text", name="👽 외계 알",
                                       marker=dict(size=26, color="pink", symbol="star"),
                                       text=["👽"], textposition="top center"))
-            fig2.update_layout(height=450, xaxis_range=[0, 11], yaxis_range=[0, 11],
+            fig2.update_layout(height=315, xaxis_range=[0, 11], yaxis_range=[0, 11],
                                xaxis_title="달콤한 정도", yaxis_title="크기", margin=dict(b=60, l=60))
             add_sweetness_axis_hints(fig2)
             st.plotly_chart(fig2, **_STRETCH)
@@ -3120,7 +3053,7 @@ elif menu == "🤝 4. 가장 친한 친구":
                 marker=dict(size=20, color="red", symbol="star")))
             fig.update_layout(title="우리 반 친구들과 새 친구의 위치",
                               xaxis_title="키(cm)", yaxis_title="발크기(mm)",
-                              height=420, margin=dict(l=20, r=20, t=48, b=20))
+                              height=294, margin=dict(l=20, r=20, t=48, b=20))
             st.plotly_chart(fig, **_STRETCH)
 
             neighbor_names = class_df.iloc[ind[0]]["이름"].tolist()
@@ -3188,26 +3121,33 @@ elif menu == "🎨 5. 비슷한 친구끼리":
 
         st.write("")
         st.markdown("### 👀 조작하기 전에, 먼저 눈으로 봐요")
-        cmp_km = st.radio("어떤 상태를 볼까요?", ["😵 이름표도 색깔도 없는 뒤죽박죽 상태", "😎 AI가 3모둠으로 나눈 후"], key="km_cmp_choice")
 
-        fig_cmp = go.Figure()
-        if cmp_km.startswith("😵"):
-            fig_cmp.add_trace(go.Scatter(x=leaf_samples['잎의 길이'], y=leaf_samples['잎의 넓이'], mode='markers',
-                                          marker=dict(size=18, color='gray'), name='이름표 없음'))
-        else:
-            _labels_demo, _ = _fit_kmeans_leaf(3)
-            _colors_demo = ['#FF4B4B', '#1C83E1', '#00C781']
-            for i in range(3):
-                mask = _labels_demo == i
-                fig_cmp.add_trace(go.Scatter(x=leaf_samples['잎의 길이'][mask], y=leaf_samples['잎의 넓이'][mask],
-                                              mode='markers', marker=dict(size=18, color=_colors_demo[i]), name=f'모둠 {i+1}'))
-        fig_cmp.update_layout(xaxis_title="잎의 길이", yaxis_title="잎의 넓이", height=300, margin=dict(l=20, r=20, t=20, b=20))
-        st.plotly_chart(fig_cmp, **_STRETCH, config={'displayModeBar': False})
+        col_km_txt, col_km_fig = st.columns([1, 1.4])
 
-        if cmp_km.startswith("😵"):
-            st.error("전부 회색이라 어떤 게 어떤 나뭇잎인지 전혀 모르겠죠?")
-        else:
-            st.success("색깔별로 비슷한 모양끼리 딱 모였죠? AI가 이름표 없이 이렇게 스스로 나눈 거예요!")
+        with col_km_txt:
+            cmp_km = st.radio("어떤 상태를 볼까요?", ["😵 이름표도 색깔도 없는 뒤죽박죽 상태", "😎 AI가 3모둠으로 나눈 후"], key="km_cmp_choice")
+
+            if cmp_km.startswith("😵"):
+                st.error("전부 회색이라 어떤 게 어떤 나뭇잎인지 전혀 모르겠죠?")
+            else:
+                st.success("색깔별로 비슷한 모양끼리 딱 모였죠? AI가 이름표 없이 이렇게 스스로 나눈 거예요!")
+
+        with col_km_fig:
+            fig_cmp = go.Figure()
+            if cmp_km.startswith("😵"):
+                fig_cmp.add_trace(go.Scatter(x=leaf_samples['잎의 길이'], y=leaf_samples['잎의 넓이'], mode='markers',
+                                              marker=dict(size=18, color='gray'), name='이름표 없음'))
+            else:
+                _labels_demo, _ = _fit_kmeans_leaf(3)
+                _colors_demo = ['#FF4B4B', '#1C83E1', '#00C781']
+                for i in range(3):
+                    mask = _labels_demo == i
+                    fig_cmp.add_trace(go.Scatter(x=leaf_samples['잎의 길이'][mask], y=leaf_samples['잎의 넓이'][mask],
+                                                  mode='markers', marker=dict(size=18, color=_colors_demo[i]), name=f'모둠 {i+1}'))
+            fig_cmp.update_layout(xaxis_title="잎의 길이", yaxis_title="잎의 넓이", height=330,
+                                  margin=dict(l=20, r=20, t=20, b=20),
+                                  legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
+            st.plotly_chart(fig_cmp, **_STRETCH, config={'displayModeBar': False})
 
         st.write("")
         st.info("💡 **다음 단계!** 2단계 탭에서 모둠 개수(K)를 직접 바꿔보며 결과가 어떻게 달라지는지 확인해봐요.")
@@ -3263,7 +3203,7 @@ elif menu == "🎨 5. 비슷한 친구끼리":
                 marker=dict(size=30, color='black', symbol='x', line=dict(width=4))
             ))
 
-            fig.update_layout(xaxis_title="잎의 길이", yaxis_title="잎의 넓이", hovermode="closest")
+            fig.update_layout(xaxis_title="잎의 길이", yaxis_title="잎의 넓이", hovermode="closest", height=300)
             st.plotly_chart(fig, **_STRETCH)
 
     # [게임: 무인도 분리수거 로봇] --------------------------------------------
@@ -3398,7 +3338,7 @@ elif menu == "🎨 5. 비슷한 친구끼리":
                                           textposition="top center",
                                           marker=dict(size=26, color="red", symbol="star",
                                                       line=dict(width=2, color="white"))))
-            fig2.update_layout(height=450, xaxis_range=[-1, 11], yaxis_range=[-1, 11],
+            fig2.update_layout(height=315, xaxis_range=[-1, 11], yaxis_range=[-1, 11],
                                margin=dict(l=20, r=20, t=30, b=20))
             st.plotly_chart(fig2, **_STRETCH)
 
@@ -3505,7 +3445,7 @@ elif menu == "🎨 5. 비슷한 친구끼리":
                                     line=dict(width=3))))
                 fig.update_layout(title="AI가 비슷한 것끼리 나눈 모둠",
                                   xaxis_title="가로(cm)", yaxis_title="세로(cm)",
-                                  height=420, margin=dict(l=20, r=20, t=48, b=20))
+                                  height=294, margin=dict(l=20, r=20, t=48, b=20))
                 st.plotly_chart(fig, **_STRETCH)
 
                 st.success("🤖 완성! AI가 **정답을 하나도 알려주지 않았는데도** 비슷한 것끼리 묶었어요!")
@@ -3777,7 +3717,8 @@ elif menu == "🧠 6. 똑똑한 생각 주머니":
             for j in range(3, 6):
                 fig.add_trace(go.Scatter(x=[node_x[j], node_x[6]], y=[node_y[j], node_y[6]],
                                           mode="lines", line=dict(color="lightgray", width=1), showlegend=False))
-            fig.update_layout(height=380, showlegend=False, xaxis_visible=False, yaxis_visible=False)
+            fig.update_layout(height=400, showlegend=False, xaxis_visible=False, yaxis_visible=False,
+                              margin=dict(l=10, r=10, t=10, b=10))
             st.plotly_chart(fig, **_STRETCH)
 
         if power >= 100:
@@ -4442,7 +4383,7 @@ elif menu == "👩‍🏫 선생님 방 (학습 분석)":
             fig.add_trace(go.Bar(x=["사전 평균", "사후 평균"], y=[pre_mean, post_mean],
                                  marker_color=["#90A4AE", "#2EC4B6"],
                                  text=[f"{pre_mean:.1f}", f"{post_mean:.1f}"], textposition="auto"))
-            fig.update_layout(title="학급 사전·사후 평균 점수 비교", yaxis_range=[0, 6], height=340,
+            fig.update_layout(title="학급 사전·사후 평균 점수 비교", yaxis_range=[0, 6], height=238,
                               margin=dict(l=20, r=20, t=48, b=20))
             st.plotly_chart(fig, **_STRETCH)
 
@@ -4471,7 +4412,7 @@ elif menu == "👩‍🏫 선생님 방 (학습 분석)":
                                   marker_color="#2D9CDB",
                                   text=survey_df["사후 평균"], textposition="auto"))
             figs.update_layout(barmode="group", title="영역별 사전·사후 평균 (5점 만점)",
-                               yaxis_range=[0, 5], height=380,
+                               yaxis_range=[0, 5], height=266,
                                margin=dict(l=20, r=20, t=48, b=20))
             st.plotly_chart(figs, **_STRETCH)
             st.dataframe(survey_df, **_STRETCH)
