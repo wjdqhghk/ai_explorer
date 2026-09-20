@@ -1,0 +1,58 @@
+
+name: 앱 깨어 있게 하기 (keep awake)
+
+on:
+  schedule:
+    - cron: "17 */4 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: keep-awake
+  cancel-in-progress: false
+
+jobs:
+  wake:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      APP_URL: "https://aiexplorer.streamlit.app/"
+
+    steps:
+      - name: 코드 내려받기
+        uses: actions/checkout@v4
+
+      - name: 파이썬 준비
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 브라우저(크롬) 설치
+        run: |
+          python -m pip install --upgrade pip
+          pip install playwright
+          playwright install --with-deps chromium
+
+      - name: 앱 깨우기 (실패하면 두 번 더 시도)
+        run: |
+          for i in 1 2 3; do
+            echo "── 시도 $i ──"
+            if python wake_app.py; then
+              echo "성공!"
+              exit 0
+            fi
+            echo "실패 — 30초 뒤 다시 시도합니다."
+            sleep 30
+          done
+          echo "세 번 모두 실패했습니다."
+          exit 1
+
+      - name: 화면 사진 남기기 (확인용)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: 앱-화면
+          path: |
+            wake_ok.png
+            wake_fail.png
+          if-no-files-found: ignore
+          retention-days: 7

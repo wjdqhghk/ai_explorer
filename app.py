@@ -595,6 +595,28 @@ footer,
 [class*="viewerBadge"],
 [data-testid="manage-app-button"] { display: none !important; visibility: hidden !important; }
 
+/* ── 화면 오른쪽 아래 '앱 관리(Manage app)' 단추와 제작자 배지 숨기기 ──
+   이 단추는 본래 **저장소 권한이 있는 사람이 로그인했을 때만** 보인다.
+   (심사위원·학생에게는 원래 안 보인다.) 그래도 혹시 모르니 이름이 다른
+   여러 판(version)을 한꺼번에 가려 둔다. 위쪽 툴바의 '메뉴 열기' 버튼은
+   건드리지 않도록, 아래쪽 배지에 해당하는 것만 골라서 지정한다. */
+[data-testid="stAppViewerBadge"],
+[data-testid="stViewerBadge"],
+[data-testid="manageAppButton"],
+[class*="viewerBadge_container"],
+[class*="viewerBadge_link"],
+[class*="viewerBadge_text"],
+[class*="profileContainer"],
+[class*="stAppDeployButton"],
+a[href*="streamlit.io/cloud"],
+a[href*="share.streamlit.io"],
+iframe[title="streamlitApp"] ~ div[class*="badge"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
 /* 헤더는 높이 0의 '투명한 껍데기'로만 남기고, 터치를 절대 가로채지 못하게 한다.
    (이 처리를 빼먹으면 화면 위쪽을 덮어 클릭·스크롤이 먹히지 않는다.) */
 header[data-testid="stHeader"],
@@ -605,8 +627,89 @@ header[data-testid="stHeader"] button,
 header[data-testid="stAppHeader"] button,
 [data-testid="stHeader"] button,
 [data-testid="stAppHeader"] button { pointer-events: auto !important; }
-/* 사이드바를 다시 펼치는 버튼은 Streamlit이 알아서 보여주므로 건드리지 않는다.
-   (강제로 display/z-index를 지정하면 투명한 덮개가 되어 터치를 막는다.) */
+/* ══════════════════════════════════════════════════════════════
+   ★★ 태블릿에서 사이드바가 접히면 다시 못 여는 문제 해결 ★★
+
+   스트림릿은 화면이 좁으면(태블릿·휴대전화) 사이드바를 스스로 접는다.
+   그때 다시 여는 버튼은 [data-testid="stExpandSidebarButton"] 인데,
+   이 버튼이 하필 **[data-testid="stToolbar"] 안에** 들어 있다.
+   위에서 툴바를 통째로 숨겨 버렸기 때문에 **다시 열 방법이 사라졌다.**
+
+   그래서 ① 툴바는 살리되(단, 빈 곳이 터치를 가로채지 않게)
+        ② 그 안의 다른 것들(⋮ 메뉴·배포 버튼 등)은 계속 숨기고
+        ③ '메뉴 열기' 버튼만 크고 눈에 띄게 되살린다.
+   태블릿은 마우스를 올릴 수 없으므로(hover 없음) 항상 보이게 해야 한다.
+   ══════════════════════════════════════════════════════════════ */
+[data-testid="stToolbar"],
+[data-testid="stAppToolbar"] {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    pointer-events: none !important;   /* 빈 영역은 터치를 통과시킨다 */
+}
+/* 툴바 안에서 '메뉴 열기'를 뺀 나머지는 계속 숨긴다 */
+[data-testid="stToolbar"] [data-testid="stToolbarActions"],
+[data-testid="stToolbar"] [data-testid="stMainMenu"],
+[data-testid="stToolbar"] [data-testid="stAppDeployButton"],
+[data-testid="stToolbar"] [data-testid="stStatusWidget"],
+[data-testid="stToolbar"] [data-testid="stHeaderActionElements"],
+[data-testid="stToolbar"] #MainMenu { display: none !important; }
+
+/* ── '☰ 메뉴' 버튼: 항상 보이고, 손가락으로 누르기 좋은 크기(56px) ── */
+[data-testid="stExpandSidebarButton"] {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    position: fixed !important;
+    top: 10px !important;
+    left: 10px !important;
+    width: 56px !important;
+    height: 56px !important;
+    min-width: 56px !important;
+    padding: 0 !important;
+    border: none !important;
+    border-radius: 16px !important;
+    background: #FF6F59 !important;
+    box-shadow: 0 3px 10px rgba(27,42,74,.32) !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 1000001 !important;
+    touch-action: manipulation !important;
+}
+/* 아이콘 글꼴이 늦게 뜨면 'keyboard_double_arrow_right' 글자가 그대로 보인다.
+   안쪽 글자는 완전히 지우고, 버튼 자체에 ☰ 를 그린다. */
+[data-testid="stExpandSidebarButton"] span,
+[data-testid="stExpandSidebarButton"] span[data-testid="stIconMaterial"],
+[data-testid="stExpandSidebarButton"] span.material-symbols-rounded {
+    font-size: 0 !important;
+    color: transparent !important;
+    line-height: 0 !important;
+}
+[data-testid="stExpandSidebarButton"] span::after,
+[data-testid="stExpandSidebarButton"] span[data-testid="stIconMaterial"]::after,
+[data-testid="stExpandSidebarButton"] span.material-symbols-rounded::after { content: none !important; }
+[data-testid="stExpandSidebarButton"]::after {
+    content: "☰";
+    font-family: 'Gowun Dodum', sans-serif !important;
+    font-size: 27px !important;
+    line-height: 1 !important;
+    color: #FFFFFF !important;
+}
+/* 눌렀을 때 살짝 들어가는 느낌 */
+[data-testid="stExpandSidebarButton"]:active { transform: translateY(2px) !important; }
+
+/* ── 접기(«) 버튼도 항상 보이게 ──
+   스트림릿 기본값은 '마우스를 올렸을 때만' 보이는데(visibility:hidden),
+   태블릿에는 마우스가 없어서 영영 안 보인다. */
+[data-testid="stSidebarCollapseButton"],
+[data-testid="stSidebarCollapseButton"] button {
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
 
 /* ══ 아이들이 손대고 싶어지게: 버튼·탭·제목 손보기 ══ */
 
