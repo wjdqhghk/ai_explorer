@@ -19,8 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 12
     env:
-      # ✏️✏️✏️ 여기에 내 스트림릿 앱 주소를 넣으세요 ✏️✏️✏️
-      APP_URL: "https://aiexplorer-gq6wkygwpooxcxklk3nccq.streamlit.app/?p=0500"
+      APP_URL: "https://aiexplorer-gq6wkygwpooxcxklk3nccq.streamlit.app/"
 
     steps:
       - name: 코드 내려받기
