@@ -248,7 +248,7 @@ SECTION_STATE_PREFIXES = {
     "🧠 6. 똑똑한 생각 주머니": ["nn_", "quiz_nn", "rw_ann", "_celeb_nn"],
     "⚖️ AI를 똑똑하게 쓰려면?": ["ethics_", "_celeb_ethics"],
     "🔧 로봇 네오 종합 점검": ["review_", "_celeb_review"],
-    "🏆 탐험 완료 (수료증)": ["cert_", "_celeb_cert"],
+    "🏆 사후평가 (수료증)": ["cert_", "_celeb_cert"],
     "🌟 인공지능이 뭐예요?": ["ai_learn_examples", "sup_", "unsup_demo", "life_ai_quiz"],
 }
 
@@ -288,6 +288,68 @@ SECTION_COLORS = {
     "km": "#2EC4B6",       # 5. 비슷한 것끼리 모으기 - 무인도 민트
     "nn": "#FF6F59",       # 6. 신경망 - 로켓 코랄
 }
+
+# =========================================================
+# 🈳 브라우저 '자동 번역' 차단
+# =========================================================
+# 크롬·엣지는 페이지 언어를 스스로 알아맞힌다. 스트림릿이 만드는 껍데기 화면은
+# lang="en" 으로 되어 있어서, 브라우저가 이 화면을 '영어 쪽'으로 잘못 보고
+# 한국어 글자를 한 번 더 번역해 버린다. 그러면
+#   '탐험 완료' → '탐구심',  '저작권' → '제작자'  처럼 글자가 망가진다.
+#
+# 심사위원·참관자 컴퓨터의 설정을 우리가 정할 수는 없으므로,
+# **페이지 쪽에서** "여기는 한국어이고 번역하지 말라"고 못을 박아 둔다.
+#   ① <html lang="ko">          → 언어를 한국어로 명시
+#   ② translate="no" / .notranslate → 번역 금지 (자식 요소까지 모두 상속된다)
+#   ③ <meta name="google" content="notranslate"> → 구글 번역기 차단
+# 화면이 새로 그려져도 유지되도록 잠깐 동안 여러 번 다시 표시한다.
+#
+# ⚠️ 이 조각은 '항상' 그려야 한다. 있다가 없어지면 아래 요소들의 자리가 밀려
+#    보고 있던 탭이 ①번으로 튕긴다.
+embed_html(
+    """
+    <script>
+    (function () {
+        function noTranslate() {
+            try {
+                var d = window.parent.document;
+                var h = d.documentElement;
+                if (!h) { return; }
+                h.setAttribute('lang', 'ko');
+                h.setAttribute('xml:lang', 'ko');
+                h.setAttribute('translate', 'no');
+                h.classList.add('notranslate');
+                if (d.body) {
+                    d.body.setAttribute('translate', 'no');
+                    d.body.classList.add('notranslate');
+                }
+                if (!d.querySelector('meta[name="google"][content="notranslate"]')) {
+                    var m = d.createElement('meta');
+                    m.setAttribute('name', 'google');
+                    m.setAttribute('content', 'notranslate');
+                    (d.head || h).appendChild(m);
+                }
+                if (!d.querySelector('meta[http-equiv="content-language"]')) {
+                    var m2 = d.createElement('meta');
+                    m2.setAttribute('http-equiv', 'content-language');
+                    m2.setAttribute('content', 'ko');
+                    (d.head || h).appendChild(m2);
+                }
+                var root = d.querySelector('[data-testid="stAppViewContainer"]');
+                if (root) {
+                    root.setAttribute('translate', 'no');
+                    root.classList.add('notranslate');
+                }
+            } catch (e) {}
+        }
+        noTranslate();
+        // 스트림릿이 화면을 다시 그린 뒤에도 표시가 남아 있도록 몇 번 더
+        [50, 200, 600, 1500, 3000].forEach(function (t) { setTimeout(noTranslate, t); });
+    })();
+    </script>
+    """,
+    height=0,
+)
 
 md_html("""
 <style>
@@ -1970,7 +2032,7 @@ MENU_OPTIONS = [
     "🧠 6. 똑똑한 생각 주머니",
     "⚖️ AI를 똑똑하게 쓰려면?",
     "🔧 로봇 네오 종합 점검",
-    "🏆 탐험 완료 (수료증)",
+    "🏆 사후평가 (수료증)",
     "👩‍🏫 선생님 방 (학습 분석)",
     "📜 자료 출처 · 저작권",
 ]
@@ -2277,11 +2339,24 @@ def island_map(key_prefix="map"):
 
 # 다른 화면으로 막 이동한 직후라면, 화면을 맨 위로 스크롤한다
 # (탭/메뉴 이동 시 이전 스크롤 위치가 남아 중간부터 보이는 문제 해결)
-if st.session_state.pop("_scroll_top", False):
+#
+# ⚠️ 이 조각은 '있다가 없어지면' 안 된다.
+#    화면 맨 위에 있던 요소 하나가 사라지면 그 아래 탭 묶음의 자리가 한 칸씩 밀리고,
+#    그러면 보고 있던 탭이 ① 번으로 튕겨 버린다.
+#    그래서 **언제나 똑같이 한 번 그리고**, 스크롤할 때만 안쪽 스크립트가 동작하게 한다.
+#    (스크롤이 필요 없을 때는 내용이 하나도 안 바뀌므로 다시 실행되지도 않는다.)
+_scroll_now = bool(st.session_state.pop("_scroll_top", False))
+if _scroll_now:
+    st.session_state["_scroll_tick"] = int(st.session_state.get("_scroll_tick", 0)) + 1
+_scroll_tick = int(st.session_state.get("_scroll_tick", 0))
+
+if True:
     embed_html(
         """
         <script>
         (function () {
+            const GO = __GO__;              /* 이동 횟수: __TICK__ */
+            if (!GO) { return; }            /* 평소에는 아무 일도 하지 않는다 */
             const doc = window.parent.document;
             function toTop() {
                 const targets = [
@@ -2308,7 +2383,8 @@ if st.session_state.pop("_scroll_top", False):
             setTimeout(toTop, 900);
         })();
         </script>
-        """,
+        """.replace("__GO__", "true" if _scroll_now else "false")
+           .replace("__TICK__", str(_scroll_tick)),
         height=0,
     )
 
@@ -2318,13 +2394,17 @@ def render_diagnostic_quiz(phase, score_key):
     phase: 'pre' 또는 'post' (위젯 key 구분 및 설문 문장 선택에 사용)"""
     survey_key = "pre_survey" if phase == "pre" else "post_survey"
 
-    if st.session_state.pop("_save_warn", False):
-        st.warning("⚠️ 결과를 파일에 저장하지 못했어요. 선생님께 알려주세요! "
-                   "(화면의 내 점수는 그대로 볼 수 있어요.)")
+    # 경고문이 '나타났다 사라지면' 아래 탭이 한 칸 밀려 ① 번으로 튕긴다.
+    # 자리(컨테이너)는 늘 하나 잡아두고, 그 안에서만 내용이 바뀌게 한다.
+    _warn_slot = st.container()
+    with _warn_slot:
+        if st.session_state.pop("_save_warn", False):
+            st.warning("⚠️ 결과를 파일에 저장하지 못했어요. 선생님께 알려주세요! "
+                       "(화면의 내 점수는 그대로 볼 수 있어요.)")
 
     # 문항이 10개라 한 화면에 다 쌓으면 스크롤이 길어진다. 1부·2부를 탭으로 나눈다.
-    tab_know, tab_think = st.tabs(["📚 1부. 인공지능 알아보기 (6문항)",
-                                   "💬 2부. 나의 생각 (4문항)"])
+    tab_know, tab_think = st.tabs(["📚 인공지능 알아보기 (6문항)",
+                                   "💬 나의 생각 (4문항)"])
 
     # 제출 버튼이 탭 '바깥'에 하나뿐이면, 1부만 풀고 눌렀을 때 2부를 건너뛴 채
     # 곧바로 결과로 넘어가 버린다. 그래서 탭마다 버튼을 따로 두고,
@@ -2346,13 +2426,13 @@ def render_diagnostic_quiz(phase, score_key):
 
         st.write("")
         _unsure = sum(1 for a in answers if a == "아직 잘 몰라요")
-        if st.button("✅ 1부 다 풀었어요! (2부로 가기)", key=f"diag_part1_{phase}",
+        if st.button("✅ 6문항 다 풀었어요! (다음으로 가기)", key=f"diag_part1_{phase}",
                      type="primary", **_STRETCH):
             st.session_state[part1_flag] = True
             part1_done = True
         # 화면에 그려지는 요소 개수가 바뀌면 보고 있던 탭이 튕기므로,
         # 안내문은 '항상 한 줄' 그리되 내용만 바꾼다.
-        st.caption("✅ 1부 완료! 이제 위쪽 **💬 2부. 나의 생각** 탭을 눌러주세요."
+        st.caption("✅ 잘했어요! 이제 위쪽 **💬 나의 생각 (4문항)** 탭을 눌러주세요."
                    if part1_done else
                    (f"👆 6문항을 모두 고른 뒤 위 버튼을 눌러주세요. "
                     f"(지금 '아직 잘 몰라요' {_unsure}개)"))
@@ -2376,7 +2456,7 @@ def render_diagnostic_quiz(phase, score_key):
                               type="primary", disabled=not part1_done, **_STRETCH)
         st.caption("👆 4개를 모두 고른 뒤 최종 제출을 눌러주세요."
                    if part1_done else
-                   "🔒 먼저 **📚 1부** 탭을 끝내야 제출할 수 있어요.")
+                   "🔒 먼저 **📚 인공지능 알아보기 (6문항)** 탭을 끝내야 제출할 수 있어요.")
 
     if submitted:
         score = 0
@@ -2451,7 +2531,7 @@ def render_page(menu):
                     go_to("🔧 로봇 네오 종합 점검")
             with _cta2:
                 if st.button("🏆 수료증 받으러 가기 🌟", key="home_go_cert", type="primary", **_STRETCH):
-                    go_to("🏆 탐험 완료 (수료증)")
+                    go_to("🏆 사후평가 (수료증)")
         elif _named:
             if st.button("🎈 탐험을 시작하겠습니다!", key="home_start", type="primary", **_STRETCH):
                 go_to("🌟 인공지능이 뭐예요?")
@@ -2543,7 +2623,7 @@ def render_page(menu):
                 st.caption("⏱️ **1차시 = 섬 1개**가 기본 속도예요. 시간이 빠듯하면 각 섬의 "
                            "**①②③까지만** 해도 성취기준은 달성됩니다. (④는 선택 활동)")
                 st.info("💡 **어느 코스든 이렇게 하세요** ①`나의 이름 & 사전 평가`로 시작 → "
-                        "②고른 섬들 진행 → ③`탐험 완료`에서 사후 평가와 수료증. "
+                        "②고른 섬들 진행 → ③`사후평가 (수료증)`에서 사후 검사와 수료증. "
                         "`선생님 방`에서 우리 반 향상도를 바로 확인할 수 있어요.")
                 c_a, c_b = st.columns(2)
                 with c_a:
@@ -2616,7 +2696,7 @@ def render_page(menu):
                 sc = st.columns(len(SURVEY_ITEMS))
                 for c, item in zip(sc, SURVEY_ITEMS):
                     c.metric(item["key"], f"{sv.get(item['key'], '-')}점")
-            st.write("이제 탐험을 시작해봐요. 6개 섬을 모두 마친 뒤 '수료증' 방에서 사후 검사를 하면 얼마나 자랐는지 알 수 있어요!")
+            st.write("이제 탐험을 시작해봐요. 6개 섬을 모두 마친 뒤 '🏆 사후평가 (수료증)' 방에서 사후 검사를 하면 얼마나 자랐는지 알 수 있어요!")
             if st.button("🚀 탐험 시작하기 (인공지능이 뭐예요?)", **_STRETCH):
                 go_to("🌟 인공지능이 뭐예요?")
             with st.expander("다시 풀기 (사전 결과 초기화)"):
@@ -5726,7 +5806,7 @@ def render_page(menu):
                             go_to("🔧 로봇 네오 종합 점검")
                     with cta2:
                         if st.button("🏆 수료증 받기", key="nn_to_cert", **_STRETCH):
-                            go_to("🏆 탐험 완료 (수료증)")
+                            go_to("🏆 사후평가 (수료증)")
                 md_html("""
                 <div style="background:#EDE7F6; border-left:5px solid #7E57C2; border-radius:14px; padding:14px 18px; margin-top:10px;">
                     <b>🏷️ 오늘 배운 것</b> 🧠<br>
@@ -6268,7 +6348,7 @@ def render_page(menu):
             with c2:
                 if all_done:
                     if st.button("🏆 수료증 받으러 가기", key="review_to_cert", **_STRETCH):
-                        go_to("🏆 탐험 완료 (수료증)")
+                        go_to("🏆 사후평가 (수료증)")
                 else:
                     if st.button("🏠 탐험 본부로", key="review_to_home", **_STRETCH):
                         go_to("🏠 탐험 본부 (홈)")
@@ -6349,9 +6429,9 @@ def render_page(menu):
                             st.session_state["review_wrong"] += 1
 
 
-    # --- [새로 추가된 메뉴: 최종 섬 (수료증 발급소)] ---
-    elif menu == "🏆 탐험 완료 (수료증)":
-        hero_card("🏆", "최종 섬 (수료증 발급소)",
+    # --- [메뉴: 사후평가 · 수료증 발급소] ---
+    elif menu == "🏆 사후평가 (수료증)":
+        hero_card("🏆", "사후평가 · 수료증 발급소",
                    "사후 검사는 언제든지 할 수 있어요. 부품 6개를 모두 모으면 수료증도 짠! 하고 나타나요.",
                    "#FFC93C")
 
@@ -6715,7 +6795,7 @@ def render_page(menu):
                     st.dataframe(survey_df, **_STRETCH)
                     st.caption("📄 이 표의 '사전 평균 / 사후 평균 / 변화량'을 보고서의 정량 분석 자료로 그대로 쓸 수 있어요.")
                 else:
-                    st.info("아직 사후 설문 응답이 없어요. 학생들이 수료증 방에서 사후 검사를 마치면 여기에 표시됩니다.")
+                    st.info("아직 사후 설문 응답이 없어요. 학생들이 “🏆 사후평가 (수료증)”에서 사후 검사를 마치면 여기에 표시됩니다.")
 
 
             with t_rec:
